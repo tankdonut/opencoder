@@ -61,7 +61,7 @@ Or read the [Agent Installation Guide](docs/guides/installation.md) - specifical
 
 ## License
 
-This harness is provided as-is for bootstrapping OpenCode environments. Individual plugin modules are licensed under their respective licenses:
+This project is licensed under the [MIT License](LICENSE). Individual plugin modules are licensed under their respective licenses:
 
 - **everything-claude-code**: See [LICENSE](build/modules/everything-claude-code/LICENSE)
 - **oh-my-openagent**: See [LICENSE](build/modules/oh-my-openagent/LICENSE)

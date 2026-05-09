@@ -72,7 +72,7 @@ Before submitting a PR:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same terms as the project.
+By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
 
 ---
 

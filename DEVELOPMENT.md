@@ -30,7 +30,7 @@ Run validation and container tests locally before pushing:
    ```bash
    podman run -it --rm opencode-harness-test bash -c "
        opencode --version &&
-       cat /workspace/.config/opencode/opencode.json &&
+        cat /etc/opencode/opencode.jsonc &&
        test -f /etc/opencode/opencode.jsonc &&
        ls -la /vendor/bin &&
        echo 'All checks passed'
@@ -56,7 +56,7 @@ Run validation and container tests locally before pushing:
 ./scripts/validate.sh
 
 # Or manually
-jq . opencode.json
+jq . build/.opencode/opencode.json
 shellcheck build/entrypoint.sh scripts/*.sh
 ```
 
@@ -129,17 +129,17 @@ git submodule update --init --recursive
 **Solution**: Verify base image is accessible:
 
 ```bash
-podman pull ghcr.io/tankdonut/tools@sha256:0f2115e5cfaa7cced5e26c4398a5d5ed667bbe2baf892a6947ab03166428b286
+podman pull ghcr.io/tankdonut/tools
 ```
 
 ### OpenCode Config Not Found
 
 **Symptom**: Container can't find `opencode.json`
 
-**Solution**: Ensure file exists in repository root:
+**Solution**: Ensure config exists at the correct path:
 
 ```bash
-ls -la opencode.json
+ls -la build/.opencode/opencode.json
 ```
 
 ### Permission Errors in Container
@@ -159,7 +159,7 @@ chown -R 1000:1000 /path/to/workspace
 **Solution**: Validate with jq:
 
 ```bash
-jq . opencode.json
+jq . build/.opencode/opencode.json
 ```
 
 ## Setup Script Options
@@ -237,17 +237,16 @@ The OpenCode version is managed in `build/.opencode-version` (single source of t
 ./scripts/build.sh
 ```
 
-To override the version or use Docker:
+To use Docker instead of Podman:
 
 ```bash
-./scripts/build.sh --version 1.4.0
 ./scripts/build.sh --runtime docker
 ```
 
-To change the OpenCode version, update `build/.opencode-version` and rebuild:
+To change the OpenCode version, use the version bumper script:
 
 ```bash
-echo "1.4.0" > build/.opencode-version
+./scripts/bump-version.sh 1.14.18
 ./scripts/build.sh
 ```
 

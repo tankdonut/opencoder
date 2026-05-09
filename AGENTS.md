@@ -16,11 +16,13 @@ The harness automates configuration, provides containerized environments, and st
 opencode-harness/
 ├── .github/                    # GitHub configuration
 │   ├── dependabot.yml          # Automated dependency updates
-│   └── workflows/              # CI/CD workflows
-│       └── ci.yml              # Main CI pipeline
-├── build/                      # Container build context (all build files)
+│       └── workflows/              # CI/CD workflows
+│           └── ci.yml              # Main CI pipeline
+├── .pre-commit-config.yaml    # Pre-commit hooks
+├── build/                     # Container build context (all build files)
 │   ├── .containerignore        # Container build exclusions
 │   ├── .opencode-version       # Pinned OpenCode version
+│   ├── .opencode-checksums     # SHA256 checksums for OpenCode tarballs
 │   ├── .opencode/              # OpenCode configuration
 │   │   ├── opencode.json       # Plugin configuration
 │   │   ├── tui.json            # TUI theme configuration
@@ -41,7 +43,10 @@ opencode-harness/
 │   ├── build.sh                # Container build script
 │   ├── container-test.sh       # Container verification tests
 │   ├── local-setup.sh          # Host bootstrap script
-│   └── validate.sh             # Pre-build validation
+│   ├── validate.sh             # Pre-build validation
+│   └── bump-version.sh         # OpenCode version bumper
+├── tests/                     # Test suite
+│   └── test_bootstrap.sh      # Bootstrap function tests
 ├── .gitignore                  # Git exclusions
 ├── AGENTS.md                   # This file
 └── README.md                   # Project documentation
@@ -192,7 +197,7 @@ install() {
 
 ```dockerfile
 # ✅ Good - multi-stage, explicit versions, clear comments
-FROM ghcr.io/tankdonut/tools@sha256:0f2115e5cfaa7cced5e26c4398a5d5ed667bbe2baf892a6947ab03166428b286 AS tools
+FROM ghcr.io/tankdonut/tools AS tools
 
 FROM docker.io/library/ubuntu:25.10
 
@@ -224,10 +229,9 @@ COPY . .
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@latest",
-        "cc-safety-net",
-        "ecc-universal",
-        "oh-my-opencode"
+        "@tarquinen/opencode-dcp@3.1.11",
+        "cc-safety-net@0.9.0",
+        "oh-my-openagent@4.0.0"
     ]
 }
 ```
@@ -295,7 +299,7 @@ jq . build/.opencode/opencode.json
 1. Update `build/.opencode-version` with the new version number
 2. Fetch checksums from GitHub Releases API:
    ```bash
-   VERSION="1.4.12"  # Use the new version
+   VERSION="1.14.18"  # Use the new version
    curl -fsSL "https://api.github.com/repos/anomalyco/opencode/releases/tags/v${VERSION}" \
      | jq -r '.assets[] | select(.name | test("opencode-linux-(x64|arm64)\\.tar\\.gz$")) | "\(.digest | split(":")[1])  \(.name)"'
    ```
@@ -403,7 +407,7 @@ git submodule update --init --recursive
 ```bash
 # Symptom: COPY --from=tools fails
 # Solution: Verify base image exists
-podman pull ghcr.io/tankdonut/tools@sha256:0f2115e5cfaa7cced5e26c4398a5d5ed667bbe2baf892a6947ab03166428b286
+podman pull ghcr.io/tankdonut/tools
 ```
 
 ### OpenCode Doesn't See Plugins
