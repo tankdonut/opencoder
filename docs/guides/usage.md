@@ -6,23 +6,23 @@ This guide covers how to effectively use OpenCode Harness in different environme
 
 ### Host Environment
 
-After running `./scripts/local-setup.sh`, OpenCode is available globally with all harness plugins loaded:
+After running `./scripts/local-setup.sh`, OpenCode is available globally with the harness configuration installed:
 
 ```bash
 # Basic OpenCode commands
 opencode --version
 opencode --help
-opencode list-plugins  # If supported
+opencode  # Start interactive TUI
 
 # Start OpenCode with harness configuration
 opencode
 ```
 
-The harness automatically loads plugins from:
+The harness configuration includes these OpenCode plugins:
 
-- **everything-claude-code**: Production agents, skills, and commands
-- **oh-my-openagent**: Multi-agent orchestration system
-- **superpowers**: Advanced workflow skills
+- `@tarquinen/opencode-dcp@3.1.11`
+- `cc-safety-net@0.9.0`
+- `oh-my-openagent@4.0.0`
 
 ### Container Environment
 
@@ -56,7 +56,7 @@ podman run -it --rm \
 podman run --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  opencode-harness opencode validate
+  opencode-harness opencode --version
 ```
 
 ### Multi-Agent Orchestration
@@ -80,8 +80,7 @@ opencode
 Access production-ready skills and commands:
 
 ```bash
-# List available skills (if supported)
-opencode list-skills
+# Skills are loaded automatically from plugins
 
 # Use specific skills in your workflow
 # - TDD workflows
@@ -132,36 +131,35 @@ podman rm my-opencode-env
 **GitHub Actions example:**
 
 ```yaml
-name: OpenCode Validation
+name: OpenCode Check
 on: [push, pull_request]
 
 jobs:
-  validate:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Run OpenCode validation
+      - name: Check OpenCode version
         run: |
           podman pull ghcr.io/tankdonut/opencode-harness:latest
           podman run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             ghcr.io/tankdonut/opencode-harness:latest \
-            opencode validate
+            opencode --version
 ```
 
 **GitLab CI example:**
 
 ```yaml
-validate-opencode:
+check-opencode:
   stage: test
   image: ghcr.io/tankdonut/opencode-harness:latest
   script:
-    - opencode validate
-    - opencode lint
+    - opencode --version
   only:
     - merge_requests
     - main
@@ -183,11 +181,10 @@ podman run -it --rm \
   opencode-harness
 ```
 
-**Project-specific configurations:**
+**Workspace mount:**
 
 ```bash
-# Each project can have its own opencode.json
-# Container automatically picks up project configuration
+# Mount a project workspace with the harness configuration
 podman run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
@@ -217,16 +214,15 @@ git commit -m "update: everything-claude-code plugin"
 
 ### Plugin Configuration
 
-**Main configuration file:** `opencode.json`
+**Main configuration file:** `build/.opencode/opencode.json`
 
 ```json
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@latest",
-        "cc-safety-net",
-        "ecc-universal",
-        "oh-my-opencode"
+        "@tarquinen/opencode-dcp@3.1.11",
+        "cc-safety-net@0.9.0",
+        "oh-my-openagent@4.0.0"
     ]
 }
 ```
@@ -235,7 +231,6 @@ git commit -m "update: everything-claude-code plugin"
 
 - Used for container-specific optimizations
 - Supports comments and trailing commas
-- Inherits from main opencode.json
 
 ### Adding Custom Plugins
 
@@ -243,8 +238,8 @@ git commit -m "update: everything-claude-code plugin"
 # Add new plugin as submodule
 git submodule add https://github.com/example/opencode-plugin.git build/modules/my-plugin
 
-# Update opencode.json
-jq '.plugin += ["my-plugin"]' opencode.json > tmp.json && mv tmp.json opencode.json
+# Update the harness OpenCode configuration
+jq '.plugin += ["my-plugin"]' build/.opencode/opencode.json > tmp.json && mv tmp.json build/.opencode/opencode.json
 
 # Rebuild container if using container deployment
 ./scripts/build.sh
@@ -254,63 +249,13 @@ jq '.plugin += ["my-plugin"]' opencode.json > tmp.json && mv tmp.json opencode.j
 
 ### Custom Skills Development
 
-Create project-specific skills:
-
-```bash
-# Create skills directory
-mkdir -p .opencode/skills/my-skill
-
-# Create skill definition
-cat > .opencode/skills/my-skill/SKILL.md << 'EOF'
-# My Custom Skill
-
-Description of what this skill does.
-
-## Usage
-...
-
-## Implementation
-...
-EOF
-```
+Custom skills can be developed following the patterns in the plugin submodules under `build/modules/`.
 
 ### Environment Variables
 
-**Host environment:**
-
-```bash
-# Set OpenCode environment variables
-export OPENCODE_CONFIG_PATH=/path/to/config
-export OPENCODE_PLUGINS_PATH=/path/to/plugins
-
-# Run with custom environment
-opencode
-```
-
-**Container environment:**
-
-```bash
-# Pass environment variables to container
-podman run -it --rm \
-  -e OPENCODE_CONFIG_PATH=/config \
-  -e OPENCODE_LOG_LEVEL=debug \
-  -v $(pwd):/workspace \
-  opencode-harness
-```
+Environment variables for OpenCode are configured by the tool itself. Refer to the OpenCode documentation for available options.
 
 ### Debugging and Logging
-
-**Enable verbose logging:**
-
-```bash
-# Host
-OPENCODE_LOG_LEVEL=debug opencode
-
-# Container
-podman run -it --rm \
-  -e OPENCODE_LOG_LEVEL=debug \
-  opencode-harness opencode
-```
 
 **Access container logs:**
 
@@ -352,10 +297,8 @@ podman run -it --rm \
 **Container layer caching:**
 
 ```bash
-# Build with cache optimization
-./scripts/build.sh \
-  --cache-from ghcr.io/tankdonut/opencode-harness:latest \
-  --tag opencode-harness
+# Build with tag
+./scripts/build.sh --tag opencode-harness
 ```
 
 **Plugin caching:**

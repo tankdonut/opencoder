@@ -79,17 +79,19 @@ opencode-harness/
 │   ├── Containerfile          # Container build definition
 │   ├── entrypoint.sh          # Container entrypoint
 │   ├── .opencode-version      # OpenCode version pin
+│   ├── .opencode-checksums    # SHA256 checksums
 │   ├── .opencode/             # OpenCode configuration
 │   ├── etc/                   # System config files
 │   └── modules/               # Git submodules
 │       ├── everything-claude-code/
 │       ├── oh-my-openagent/
 │       └── superpowers/
-├── opencode.json              # Plugin configuration
+├── .pre-commit-config.yaml   # Pre-commit hooks
 ├── scripts/
 │   ├── local-setup.sh         # Host installation script
 │   ├── validate.sh            # Pre-build validation
-│   └── container-test.sh      # Container verification
+│   ├── container-test.sh      # Container verification
+│   └── bump-version.sh        # Version bumper
 ├── AGENTS.md                  # Detailed agent instructions
 ├── DEVELOPMENT.md             # Development workflows
 └── CONTRIBUTING.md            # Contribution guidelines
@@ -97,16 +99,15 @@ opencode-harness/
 
 ## Configuration
 
-**Main config file:** `opencode.json`
+**Main config file:** `build/.opencode/opencode.json`
 
 ```json
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@latest",
-        "cc-safety-net",
-        "ecc-universal",
-        "oh-my-opencode"
+        "@tarquinen/opencode-dcp@3.1.11",
+        "cc-safety-net@0.9.0",
+        "oh-my-openagent@4.0.0"
     ]
 }
 ```
@@ -186,13 +187,13 @@ git submodule update --init --recursive
 
 ```bash
 # Check base images are accessible
-podman pull ghcr.io/tankdonut/tools@sha256:0f2115e5cfaa7cced5e26c4398a5d5ed667bbe2baf892a6947ab03166428b286
+podman pull ghcr.io/tankdonut/tools
 ```
 
 ### JSON Validation Errors
 
 ```bash
-jq . opencode.json  # Validate syntax
+jq . build/.opencode/opencode.json  # Validate syntax
 ```
 
 ### Permission Errors

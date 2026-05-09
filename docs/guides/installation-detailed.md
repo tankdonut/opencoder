@@ -7,7 +7,7 @@ This comprehensive installation guide covers all setup methods for OpenCode Harn
 Before installing OpenCode Harness, ensure you have:
 
 - **Git**: 2.34+ (required for submodule support)
-- **Node.js**: 12.22+ (includes npm, required for OpenCode)
+- **Node.js**: 20+ (includes npm, required for OpenCode)
 - **Podman** or **Docker**: For container deployments (optional but recommended)
 - **jq**: For JSON validation and manipulation (optional but recommended)
 
@@ -22,7 +22,7 @@ Before installing OpenCode Harness, ensure you have:
 ```bash
 # Check prerequisites
 git --version          # Should be 2.34+
-node --version         # Should be 12.22+
+node --version         # Should be 20+
 npm --version          # Should be included with Node.js
 podman --version       # Or docker --version
 jq --version           # Optional but recommended
@@ -57,7 +57,7 @@ The setup script will:
 
 - Check all prerequisites and report any missing dependencies
 - Initialize git submodules (everything-claude-code, oh-my-openagent, superpowers)
-- Validate `opencode.json` syntax and plugin references
+- Validate `build/.opencode/opencode.json` syntax and plugin references
 - Install or update OpenCode to the latest compatible version
 - Set up configuration files and permissions
 - Verify the installation works correctly
@@ -69,7 +69,7 @@ The setup script will:
 opencode --version
 
 # Verify plugin configuration
-cat opencode.json
+cat build/.opencode/opencode.json
 
 # Test basic functionality
 opencode --help
@@ -93,7 +93,7 @@ node --version && npm --version
 
 # Clear npm cache and retry
 npm cache clean --force
-npm install -g @opencode/cli@latest
+npm install -g opencode@latest
 ```
 
 **Permission errors:**
@@ -103,7 +103,7 @@ npm install -g @opencode/cli@latest
 chmod +x scripts/local-setup.sh
 
 # If npm global installation fails, use npx
-npx @opencode/cli --version
+npx opencode --version
 ```
 
 ### Method 2: Container Usage (Recommended for Production)
@@ -173,7 +173,7 @@ podman run --rm \
   -v $GITHUB_WORKSPACE:/workspace \
   -w /workspace \
   ghcr.io/tankdonut/opencode-harness:latest \
-  opencode validate
+  opencode --version  # Verify opencode works
 ```
 
 ### Method 3: Development Setup
@@ -297,7 +297,7 @@ opencode --version
 opencode --help
 
 # Verify plugin loading
-grep -E '"plugin":\s*\[' opencode.json
+grep -E '"plugin":\s*\[' build/.opencode/opencode.json
 
 # Test submodule status
 git submodule status
@@ -314,7 +314,7 @@ git submodule status
 ./scripts/container-test.sh test-harness
 
 # Verify plugin functionality
-opencode list-plugins  # If supported by your OpenCode version
+# Plugin configuration is in build/.opencode/opencode.json
 ```
 
 ### Troubleshooting Common Issues
@@ -346,11 +346,11 @@ podman system prune -a
 ```bash
 # Check for multiple OpenCode installations
 which opencode
-npm list -g @opencode/cli
+npm list -g opencode
 
 # Uninstall and reinstall cleanly
-npm uninstall -g @opencode/cli
-npm install -g @opencode/cli@latest
+npm uninstall -g opencode
+npm install -g opencode@latest
 ```
 
 ## Next Steps

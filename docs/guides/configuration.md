@@ -1,586 +1,211 @@
 # OpenCode Harness - Configuration Guide
 
-This comprehensive guide covers all configuration options for OpenCode Harness across different deployment methods and use cases.
+OpenCode Harness uses two configuration files to control plugin loading and container behavior. This guide documents their structure and how to modify them.
 
-## Configuration Files
+## Configuration Files Overview
 
-### Primary Configuration: opencode.json
+| File | Format | Purpose |
+|------|--------|---------|
+| `build/.opencode/opencode.json` | JSON | Project plugin list with pinned versions |
+| `build/etc/opencode/opencode.jsonc` | JSONC | Container runtime config (compaction, permissions, plugins) |
 
-The main configuration file defines which plugins to load and global OpenCode settings:
+## Plugin Configuration
 
-**Location:** Root of repository
-**Format:** JSON (strict syntax required)
+**Location:** `build/.opencode/opencode.json`
+**Format:** JSON (strict syntax)
 
 ```json
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@latest",
-        "cc-safety-net",
-        "ecc-universal",
-        "oh-my-opencode"
-    ],
-    "settings": {
-        "maxTokens": 4096,
-        "temperature": 0.7,
-        "model": "claude-3-opus"
-    }
+        "@tarquinen/opencode-dcp@3.1.11",
+        "cc-safety-net@0.9.0",
+        "oh-my-openagent@4.0.0"
+    ]
 }
 ```
 
-### Container Configuration: build/etc/opencode/opencode.jsonc
+### Plugins
 
-Container-specific configuration with extended features:
+- `@tarquinen/opencode-dcp@3.1.11` — Distributed context protocol plugin. Pinned to 3.1.11 for reproducibility.
+- `cc-safety-net@0.9.0` — Safety guardrails for agent operations. Pinned to 0.9.0.
+- `oh-my-openagent@4.0.0` — Multi-agent orchestration with Sisyphus orchestrator. Pinned to 4.0.0.
+
+All plugin versions are pinned. Do not use `@latest` in this file; update versions deliberately when submodules change.
+
+### Validation
+
+```bash
+jq . build/.opencode/opencode.json
+```
+
+## Container Configuration
 
 **Location:** `build/etc/opencode/opencode.jsonc`
-**Format:** JSONC (supports comments and trailing commas)
+**Format:** JSONC (supports comments)
+
+This file is copied to `/etc/opencode/opencode.jsonc` inside the container and controls runtime behavior.
 
 ```jsonc
 {
     "$schema": "https://opencode.ai/config.json",
-    // Inherit from main configuration
-    "extends": "/opencode/default/opencode.json",
-
-    // Container-specific overrides
-    "plugin": [
-        "@tarquinen/opencode-dcp@latest",
-        "cc-safety-net",
-        "ecc-universal",
-        "oh-my-opencode"
+    // Disable automatic self-updates inside the container
+    "autoupdate": false,
+    // Conversation compaction settings to manage context size
+    "compaction": {
+        // Automatically compact long conversations
+        "auto": true,
+        // Remove low-value messages during compaction
+        "prune": true,
+        // Tokens reserved to avoid exceeding model context limits
+        "reserved": 10000
+    },
+    // Default agent profile to use when none is specified
+    "default_agent": "build",
+    // Additional instruction files loaded into the agent context
+    "instructions": [
+        "AGENTS.md"
     ],
-
-    // Container optimizations
-    "settings": {
-        "containerMode": true,
-        "workspacePath": "/workspace",
-        "cachePath": "/tmp/opencode-cache",
-        "logLevel": "info", // debug, info, warn, error
-        "maxConcurrentTasks": 4,
-    },
-
-    // Plugin-specific configurations
-    "pluginConfig": {
-        "oh-my-opencode": {
-            "agentSettings": {
-                "sisyphus": {
-                    "model": "claude-3-opus",
-                    "temperature": 0.3,
-                    "maxTokens": 8192
-                },
-                "hephaestus": {
-                    "model": "gpt-4-turbo",
-                    "temperature": 0.1,
-                    "maxTokens": 4096
-                }
-            }
-        }
-    }
-}
-```
-
-### User Configuration
-
-**Location:** `~/.config/opencode/opencode.json` or `~/.config/opencode/opencode.jsonc`
-**Purpose:** User-specific settings that apply across all projects
-
-```jsonc
-{
-    // User preferences
-    "settings": {
-        "defaultModel": "claude-3-opus",
-        "preferredTheme": "dark",
-        "autoSave": true,
-        "backupInterval": 300 // seconds
-    },
-
-    // User-specific plugin configurations
-    "pluginConfig": {
-        "oh-my-opencode": {
-            "userPreferences": {
-                "verboseLogging": false,
-                "autoUpdate": true,
-                "telemetry": false
-            }
+    // Default permission policy for tool usage
+    // "ask" prompts before executing the action
+    "permission": {
+        "edit": "ask",
+        "write": "ask",
+        "bash": {
+            "*": "ask",
+            "basename": "allow",
+            "dirname": "allow",
+            "file": "allow",
+            "git branch *": "allow",
+            "git diff *": "allow",
+            "git log *": "allow",
+            "git rev-parse *": "allow",
+            "git show *": "allow",
+            "git status *": "allow",
+            "head *": "allow",
+            "ls *": "allow",
+            "pwd": "allow",
+            "realpath": "allow",
+            "stat": "allow",
+            "tail *": "allow",
+            "wc *": "allow",
+            "which": "allow"
         }
     },
-
-    // API keys and credentials (use environment variables instead)
-    // DO NOT store secrets here - use environment variables
-    "apiKeys": {
-        "anthropic": "${ANTHROPIC_API_KEY}",
-        "openai": "${OPENAI_API_KEY}"
-    }
-}
-```
-
-### Project-Specific Configuration
-
-**Location:** `.opencode/opencode.json` or `.opencode/opencode.jsonc`
-**Purpose:** Project-specific overrides and settings
-
-```jsonc
-{
-    // Project-specific plugin selection
+    // OpenCode plugins to load inside the container
     "plugin": [
-        "@tarquinen/opencode-dcp@latest",
-        "cc-safety-net",
-        "ecc-universal",
-        "oh-my-opencode",
-        "project-specific-plugin" // Local plugin
+        "opencode-beads",
+        "@tarquinen/opencode-dcp@latest"
     ],
-
-    // Project settings
-    "settings": {
-        "projectName": "MyProject",
-        "projectType": "web-application",
-        "targetFramework": "react-typescript",
-        "codeStyle": "prettier-eslint"
-    },
-
-    // Project-specific agent configurations
-    "pluginConfig": {
-        "oh-my-opencode": {
-            "projectContext": {
-                "domain": "e-commerce",
-                "complexity": "high",
-                "teamSize": "large",
-                "codebase": "mature"
-            },
-            "skillOverrides": {
-                "frontend-ui-ux": {
-                    "designSystem": "material-ui",
-                    "stateManagement": "redux-toolkit"
-                }
-            }
-        }
+    // Sharing behavior for sessions (manual = explicit user action required)
+    "share": "manual",
+    // File watcher configuration for workspace awareness
+    "watcher": {
+        "ignore": [
+            // Ignore VCS metadata
+            ".git/**",
+            // Ignore dependency directories
+            "node_modules/**",
+            // Ignore build outputs
+            "dist/**",
+            "build/**"
+        ]
     }
 }
 ```
 
-## Plugin Configuration
+### Key Settings
 
-### Core Plugins
+- **`autoupdate: false`** — Prevents OpenCode from updating itself inside the container. Version is pinned via `build/.opencode-version`.
+- **`compaction`** — Manages context window usage. `reserved: 10000` keeps 10k tokens free to avoid truncation.
+- **`default_agent: "build"`** — Uses the `build` agent profile by default in the container.
+- **`instructions: ["AGENTS.md"]`** — Loads project instructions into every agent session.
+- **`permission`** — All file edits and writes require confirmation (`"ask"`). Read-only bash commands (`ls`, `cat`, `git log`, etc.) are auto-allowed. Everything else prompts.
+- **`plugin`** — Container uses a different plugin set than the project config. `opencode-beads` and `@tarquinen/opencode-dcp@latest` are loaded at runtime.
+- **`share: "manual"`** — Sessions are never shared without explicit user action.
+- **`watcher.ignore`** — Excludes `.git`, `node_modules`, `dist`, and `build` directories from file watching.
 
-#### everything-claude-code Configuration
-
-```jsonc
-{
-    "pluginConfig": {
-        "everything-claude-code": {
-            "agents": {
-                "enabled": ["code-reviewer", "test-writer", "documentation-generator"],
-                "disabled": ["legacy-converter"]
-            },
-            "skills": {
-                "tdd": {
-                    "framework": "jest", // or "vitest", "mocha"
-                    "coverageThreshold": 80
-                },
-                "git-workflows": {
-                    "defaultBranch": "main",
-                    "conventionalCommits": true,
-                    "autoRebase": true
-                }
-            }
-        }
-    }
-}
-```
-
-#### oh-my-openagent Configuration
-
-```jsonc
-{
-    "pluginConfig": {
-        "oh-my-opencode": {
-            // Agent models and settings
-            "agents": {
-                "sisyphus": {
-                    "model": "claude-3-opus",
-                    "temperature": 0.3,
-                    "maxTokens": 8192,
-                    "systemPrompt": "Custom orchestrator instructions..."
-                },
-                "hephaestus": {
-                    "model": "gpt-4-turbo",
-                    "temperature": 0.1,
-                    "maxTokens": 4096,
-                    "specialization": "backend-development"
-                },
-                "prometheus": {
-                    "model": "claude-3-opus",
-                    "temperature": 0.2,
-                    "planningDepth": "detailed"
-                }
-            },
-
-            // Background task limits
-            "backgroundTasks": {
-                "maxConcurrent": 5,
-                "timeoutMs": 300000, // 5 minutes
-                "retryAttempts": 3
-            },
-
-            // Skill-embedded MCPs
-            "skillMCPs": {
-                "autoCleanup": true,
-                "resourceLimits": {
-                    "memory": "256MB",
-                    "timeout": 60000
-                }
-            }
-        }
-    }
-}
-```
-
-#### superpowers Configuration
-
-```jsonc
-{
-    "pluginConfig": {
-        "superpowers": {
-            "workflows": {
-                "tdd": {
-                    "testRunner": "jest",
-                    "coverageRequired": true,
-                    "redGreenRefactor": true
-                },
-                "debugging": {
-                    "systematic": true,
-                    "rootCauseAnalysis": true,
-                    "reproducibility": "always"
-                },
-                "git": {
-                    "atomicCommits": true,
-                    "conventionalCommits": true,
-                    "signoffRequired": false
-                }
-            }
-        }
-    }
-}
-```
-
-### Custom Plugin Configuration
-
-```jsonc
-{
-    "plugin": [
-        // ... core plugins ...
-        "custom-plugin"
-    ],
-    "pluginConfig": {
-        "custom-plugin": {
-            "enabled": true,
-            "settings": {
-                "customSetting": "value"
-            },
-            "permissions": {
-                "filesystem": "read-write",
-                "network": "restricted",
-                "execution": "sandboxed"
-            }
-        }
-    }
-}
-```
-
-## Environment-Specific Configuration
-
-### Development Environment
-
-```jsonc
-{
-    "settings": {
-        "environment": "development",
-        "logLevel": "debug",
-        "hotReload": true,
-        "sourceMap": true,
-        "debugMode": true
-    },
-
-    "pluginConfig": {
-        "oh-my-opencode": {
-            "development": {
-                "verboseLogging": true,
-                "experimentalFeatures": true,
-                "autoReload": true
-            }
-        }
-    }
-}
-```
-
-### Production Environment
-
-```jsonc
-{
-    "settings": {
-        "environment": "production",
-        "logLevel": "warn",
-        "optimized": true,
-        "telemetry": true
-    },
-
-    "pluginConfig": {
-        "oh-my-opencode": {
-            "production": {
-                "performanceMode": true,
-                "resourceLimits": {
-                    "maxMemory": "2GB",
-                    "maxConcurrency": 3
-                },
-                "errorReporting": true
-            }
-        }
-    }
-}
-```
-
-### Container Environment Variables
-
-Configure the harness through environment variables:
+### Validation
 
 ```bash
-# Core OpenCode settings
-export OPENCODE_CONFIG_PATH=/custom/config/path
-export OPENCODE_LOG_LEVEL=debug
-export OPENCODE_WORKSPACE=/workspace
-export OPENCODE_CACHE_DIR=/tmp/opencode
+jq . build/etc/opencode/opencode.jsonc
+```
 
-# Plugin-specific environment variables
-export OMO_AGENT_MODEL=claude-3-opus
-export OMO_MAX_CONCURRENCY=5
-export OMO_TIMEOUT_MS=300000
+## Container Module Control
 
-# API keys (never hardcode these)
-export ANTHROPIC_API_KEY=your_key_here
-export OPENAI_API_KEY=your_key_here
+The entrypoint script (`build/entrypoint.sh`) supports environment variables to enable or disable submodule-based plugins at container startup. All default to enabled.
 
-# Container runtime
+| Variable | Default | Controls |
+|----------|---------|----------|
+| `ECC_ENABLED` | `true` | everything-claude-code module assets |
+| `OMO_ENABLED` | `true` | oh-my-openagent module assets and oh-my-opencode installation |
+| `SUPERPOWERS_ENABLED` | `true` | superpowers module assets |
+
+Set a variable to `0`, `false`, or `no` to disable the corresponding module.
+
+### Examples
+
+```bash
+# Run without everything-claude-code
+podman run -it --rm -e ECC_ENABLED=false opencode-harness
+
+# Run with only superpowers
 podman run -it --rm \
-  -e OPENCODE_LOG_LEVEL=debug \
-  -e OMO_AGENT_MODEL=claude-3-opus \
-  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
-  -v $(pwd):/workspace \
+  -e ECC_ENABLED=false \
+  -e OMO_ENABLED=false \
   opencode-harness
+
+# Run with everything enabled (default)
+podman run -it --rm opencode-harness
 ```
 
-## Configuration Validation
+### OMO Subscription Flags
 
-### JSON Schema Validation
+When `OMO_ENABLED=true`, the entrypoint passes subscription flags to `bunx oh-my-opencode install`. Set these to configure which LLM subscriptions to declare:
+
+- `OMO_CLAUDE` — Claude subscription (`yes|no|max20`)
+- `OMO_GEMINI` — Gemini subscription (`yes|no`)
+- `OMO_COPILOT` — GitHub Copilot subscription (`yes|no`)
+- `OMO_OPENAI` — OpenAI subscription (`yes|no`)
+
+## Adding Plugins
+
+1. Add the plugin as a git submodule:
 
 ```bash
-# Validate main configuration
-jq empty opencode.json && echo "Valid JSON" || echo "Invalid JSON"
-
-# Validate with schema (if available)
-jsonschema -i opencode.json schema/opencode-schema.json
+git submodule add <plugin-url> build/modules/<plugin-name>
 ```
 
-### Configuration Testing
+2. Add the plugin to `build/.opencode/opencode.json` with a pinned version:
 
-```bash
-# Test configuration loading
-opencode --config-check
-
-# Test plugin loading
-opencode --list-plugins
-
-# Verbose configuration debugging
-OPENCODE_LOG_LEVEL=debug opencode --config-check
+```json
+{
+    "$schema": "https://opencode.ai/config.json",
+    "plugin": [
+        "@tarquinen/opencode-dcp@3.1.11",
+        "cc-safety-net@0.9.0",
+        "oh-my-openagent@4.0.0",
+        "<new-plugin>@<version>"
+    ]
+}
 ```
 
-### Validation Scripts
+3. Rebuild and test:
 
 ```bash
-# Use built-in validation
+./scripts/build.sh --tag test --no-cache
+./scripts/container-test.sh test
+```
+
+## Validating Configuration
+
+```bash
+# Validate JSON syntax for plugin config
+jq . build/.opencode/opencode.json
+
+# Validate JSONC syntax for container config
+jq . build/etc/opencode/opencode.jsonc
+
+# Run full pre-build validation
 ./scripts/validate.sh
-
-# Manual validation
-jq . opencode.json > /dev/null && echo "✓ opencode.json valid"
-jq . .opencode/opencode.jsonc > /dev/null && echo "✓ project config valid"
-jq . ~/.config/opencode/opencode.json > /dev/null && echo "✓ user config valid"
 ```
-
-## Advanced Configuration
-
-### Model Selection Strategy
-
-```jsonc
-{
-    "pluginConfig": {
-        "oh-my-opencode": {
-            "modelStrategy": {
-                "orchestration": "claude-3-opus", // Main coordination
-                "coding": "gpt-4-turbo",          // Implementation
-                "review": "claude-3-opus",        // Code review
-                "planning": "gpt-4-turbo",        // Strategic planning
-                "documentation": "claude-3-haiku" // Fast documentation
-            },
-
-            "fallback": {
-                "primary": "claude-3-opus",
-                "secondary": "gpt-4-turbo",
-                "emergency": "gpt-3.5-turbo"
-            }
-        }
-    }
-}
-```
-
-### Performance Tuning
-
-```jsonc
-{
-    "settings": {
-        "performance": {
-            "caching": {
-                "enabled": true,
-                "strategy": "aggressive",
-                "ttl": 3600 // seconds
-            },
-            "concurrency": {
-                "maxParallelTasks": 4,
-                "queueStrategy": "priority",
-                "resourceLimits": {
-                    "memory": "4GB",
-                    "cpu": "2 cores"
-                }
-            },
-            "optimization": {
-                "lazyLoading": true,
-                "precompilation": true,
-                "bundling": "production"
-            }
-        }
-    }
-}
-```
-
-### Security Configuration
-
-```jsonc
-{
-    "security": {
-        "permissions": {
-            "filesystem": {
-                "allowedPaths": ["/workspace", "/tmp"],
-                "deniedPaths": ["/etc", "/usr", "/root"],
-                "readOnly": false
-            },
-            "network": {
-                "allowedDomains": ["api.anthropic.com", "api.openai.com"],
-                "proxyRequired": false,
-                "tlsOnly": true
-            },
-            "execution": {
-                "sandboxed": true,
-                "timeoutMs": 60000,
-                "memoryLimit": "1GB"
-            }
-        },
-
-        "secrets": {
-            "storageMethod": "environment", // never "file"
-            "encryption": "AES-256",
-            "rotationPolicy": "90days"
-        }
-    }
-}
-```
-
-## Configuration Troubleshooting
-
-### Common Issues
-
-**Configuration not found:**
-
-```bash
-# Check configuration file locations
-ls -la opencode.json
-ls -la .opencode/opencode.json*
-ls -la ~/.config/opencode/opencode.json*
-ls -la build/etc/opencode/opencode.jsonc
-```
-
-**Plugin loading failures:**
-
-```bash
-# Verify plugin paths
-git submodule status
-ls -la build/modules/
-
-# Check plugin configuration
-jq '.plugin[]' opencode.json
-```
-
-**Permission errors:**
-
-```bash
-# Fix configuration file permissions
-chmod 644 opencode.json
-chmod 644 ~/.config/opencode/opencode.json
-
-# Fix directory permissions
-chmod 755 .opencode/
-chmod 755 ~/.config/opencode/
-```
-
-### Debug Configuration Loading
-
-```bash
-# Enable verbose configuration debugging
-export OPENCODE_CONFIG_DEBUG=true
-export OPENCODE_LOG_LEVEL=debug
-
-# Run with configuration tracing
-opencode --trace-config
-
-# Container debugging
-podman run -it --rm \
-  -e OPENCODE_CONFIG_DEBUG=true \
-  -e OPENCODE_LOG_LEVEL=debug \
-  opencode-harness opencode --config-check
-```
-
-### Configuration Backup and Recovery
-
-```bash
-# Backup current configuration
-cp opencode.json opencode.json.backup
-cp -r .opencode/ .opencode.backup/
-cp -r ~/.config/opencode/ ~/.config/opencode.backup/
-
-# Restore from backup
-cp opencode.json.backup opencode.json
-rm -rf .opencode/
-mv .opencode.backup/ .opencode/
-```
-
-## Best Practices
-
-### Configuration Management
-
-1. **Version control**: Always commit `opencode.json` to version control
-2. **Environment separation**: Use different configurations for dev/staging/production
-3. **Secret management**: Never commit API keys or secrets
-4. **Documentation**: Document custom configuration choices
-5. **Validation**: Always validate configuration files before deployment
-
-### Security Best Practices
-
-1. **Use environment variables** for all secrets and API keys
-2. **Limit plugin permissions** to minimum required access
-3. **Regular updates** of plugins and dependencies
-4. **Audit configurations** regularly for security issues
-5. **Sandbox execution** in production environments
-
-### Performance Best Practices
-
-1. **Resource limits**: Set appropriate memory and CPU limits
-2. **Caching strategy**: Configure caching based on usage patterns
-3. **Concurrency limits**: Balance parallelism with resource usage
-4. **Model selection**: Choose appropriate models for different tasks
-5. **Monitoring**: Monitor performance metrics and adjust accordingly

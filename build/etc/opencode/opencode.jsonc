@@ -43,11 +43,8 @@
             "which": "allow"
         }
     },
-    // OpenCode plugins to load
-    "plugin": [
-        "opencode-beads",
-        "@tarquinen/opencode-dcp@latest"
-    ],
+    // Plugins are defined in build/.opencode/opencode.json to keep project-level
+    // and container-level plugin lists in sync
     // Sharing behavior for sessions (manual = explicit user action required)
     "share": "manual",
     // File watcher configuration for workspace awareness
