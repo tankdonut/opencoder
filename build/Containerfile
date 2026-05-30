@@ -13,7 +13,7 @@
 #   opencode-harness:latest  - current default
 # ============================================
 
-FROM ghcr.io/tankdonut/tools:latest@sha256:82928a02f34ee96e5a3d7fb168a4dd148c2948286d94b935e14c36a8a43dbab0 AS tools
+FROM ghcr.io/tankdonut/tools:latest@sha256:40657186eff60474d388f0c2515e4b1ac54c0afe95e67bdc8d2de9a2324f02d1 AS tools
 
 FROM docker.io/library/ubuntu:26.04
 
