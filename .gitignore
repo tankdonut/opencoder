@@ -25,7 +25,9 @@ Thumbs.db
 .opencode/.sessions/
 .opencode/.temp/
 .opencode/session-*.json
-.sisyphus/
+
+# Oh My OpenAgent
+.omo/
 
 # Container Runtime
 *.log
