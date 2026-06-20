@@ -3,6 +3,6 @@
     "plugin": [
         "@tarquinen/opencode-dcp@3.1.13",
         "cc-safety-net@1.0.6",
-        "oh-my-openagent@4.11.1"
+        "oh-my-openagent@4.12.0"
     ]
 }
