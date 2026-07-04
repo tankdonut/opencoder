@@ -1,19 +1,19 @@
-# OpenCode Harness - Agent Instructions
+# opencoder - Agent Instructions
 
 ## Overview
 
-This project provides a **harness for bootstrapping OpenCode environments**. It bundles three powerful OpenCode plugin ecosystems as git submodules:
+This project **bootstraps OpenCode environments**. It bundles three powerful OpenCode plugin ecosystems as git submodules:
 
 - **everything-claude-code** - Production-ready agents, skills, hooks, and commands
 - **oh-my-openagent** - Multi-agent orchestration with 26 tools and 46 lifecycle hooks
 - **superpowers** - Advanced workflow skills and commands
 
-The harness automates configuration, provides containerized environments, and standardizes OpenCode setups across teams.
+opencoder automates configuration, provides containerized environments, and standardizes OpenCode setups across teams.
 
 ## Project Structure
 
 ```text
-opencode-harness/
+opencoder/
 ├── .github/                    # GitHub configuration
 │   ├── CODEOWNERS              # Review auto-assignment
 │   ├── dependabot.yml          # Dependabot (docker + github-actions ecosystems)
@@ -92,9 +92,9 @@ git submodule update --init --recursive
 # ./scripts/build.sh --tag my-tag --runtime docker --no-cache
 
 # Run container with OpenCode pre-configured
-podman run -it --rm opencode-harness
+podman run -it --rm opencoder
 # OR
-docker run -it --rm opencode-harness
+docker run -it --rm opencoder
 ```
 
 ### Plugin Management
@@ -121,7 +121,7 @@ cat build/.opencode/opencode.json
 git submodule status
 
 # Test container build
-./scripts/build.sh --tag opencode-harness --no-cache
+./scripts/build.sh --tag opencoder --no-cache
 ```
 
 ### CI/CD
@@ -131,50 +131,51 @@ git submodule status
 ./scripts/validate.sh
 
 # Run container test suite (same as CI test job)
-./scripts/container-test.sh opencode-harness:latest
+./scripts/container-test.sh opencoder:latest
 
 # Run container test suite with Docker
-./scripts/container-test.sh opencode-harness:latest docker
+./scripts/container-test.sh opencoder:latest docker
 
 # Build and test like CI
-./scripts/build.sh --tag opencode-harness:ci
-./scripts/container-test.sh opencode-harness:ci
+./scripts/build.sh --tag opencoder:ci
+./scripts/container-test.sh opencoder:ci
 ```
 
 ### Container Registry
 
-CI (on push to `main` + `workflow_dispatch`) builds and triple-tags the image at `ghcr.io/tankdonut/opencode-harness`:
+CI (on push to `main` + `workflow_dispatch`) builds and triple-tags the image at `ghcr.io/tankdonut/opencoder`:
+
 - `:latest` — rolling
 - `:<version>` — from `build/.opencode-version`
 - `:<git-sha>` — exact commit
 
 ```bash
 # Pull pre-built container from GitHub Container Registry
-podman pull ghcr.io/tankdonut/opencode-harness:latest
+podman pull ghcr.io/tankdonut/opencoder:latest
 
 # Run pre-built container
-podman run -it --rm ghcr.io/tankdonut/opencode-harness:latest
+podman run -it --rm ghcr.io/tankdonut/opencoder:latest
 ```
 
 ### Debug Commands
 
 ```bash
 # Inspect image layers
-podman history opencode-harness
+podman history opencoder
 
 # Check image size
-podman images opencode-harness
+podman images opencoder
 
 # View build logs
 ./scripts/build.sh 2>&1 | tee build.log
 
 # Scan for vulnerabilities
-podman image scan opencode-harness
+podman image scan opencoder
 ```
 
 ## Agent Persona
 
-You are an **OpenCode Harness Engineer** specializing in:
+You are an **opencoder Engineer** specializing in:
 
 - **Configuration Management**: Setting up OpenCode environments with proper plugin wiring
 - **Container Engineering**: Building reproducible OpenCode containers
@@ -363,11 +364,13 @@ These match the same 7-day policy. Do not weaken one without weakening all three
 
 1. Update `build/.opencode-version` with the new version number
 2. Fetch checksums from GitHub Releases API:
+
    ```bash
    VERSION="1.14.18"  # Use the new version
    curl -fsSL "https://api.github.com/repos/anomalyco/opencode/releases/tags/v${VERSION}" \
      | jq -r '.assets[] | select(.name | test("opencode-linux-(x64|arm64)\\.tar\\.gz$")) | "\(.digest | split(":")[1])  \(.name)"'
    ```
+
 3. Update `build/.opencode-checksums` with the new hashes
 4. Run validation: `./scripts/validate.sh`
 5. Test container build: `./scripts/build.sh --tag test --no-cache`
@@ -405,7 +408,7 @@ git commit -m "chore: update <name> submodule"
 
 - **Never commit `.env` files** - use `.env.example` templates instead
 - **Pin container base image tags** - `ubuntu:26.04` not `ubuntu:latest`
-- **Scan containers for vulnerabilities** - `podman image scan opencode-harness`
+- **Scan containers for vulnerabilities** - `podman image scan opencoder`
 - **Validate submodule URLs** - ensure they point to trusted sources
 - **Review upstream changes** before updating submodules
 - **No secrets in images** - API keys and credentials never committed or baked into images
@@ -431,13 +434,13 @@ Before committing container changes:
 ./scripts/validate.sh
 
 # 2. Test container build
-./scripts/build.sh --tag opencode-harness-test --no-cache
+./scripts/build.sh --tag opencoder-test --no-cache
 
 # 3. Run container test suite
-./scripts/container-test.sh opencode-harness-test
+./scripts/container-test.sh opencoder-test
 
 # 4. Test container runtime manually
-podman run -it --rm opencode-harness-test bash -c "
+podman run -it --rm opencoder-test bash -c "
     opencode --version && \
     ls -la /vendor/bin && \
     test -f /etc/opencode/opencode.jsonc && echo '✓ System config present' && \
@@ -448,13 +451,13 @@ podman run -it --rm opencode-harness-test bash -c "
 mkdir -p /tmp/test-workspace
 podman run -it --rm \
     -v /tmp/test-workspace:/workspace \
-    opencode-harness-test bash -c "cd /workspace && pwd && ls -la"
+    opencoder-test bash -c "cd /workspace && pwd && ls -la"
 
 # 6. Test host setup (in clean environment if possible)
 ./scripts/local-setup.sh --dry-run  # If dry-run flag exists
 
 # 7. Scan for vulnerabilities
-podman image scan opencode-harness-test
+podman image scan opencoder-test
 ```
 
 ## Common Issues
@@ -528,4 +531,4 @@ USER opencode
 
 ---
 
-**Remember**: This harness is about **reproducibility** and **ease of setup**. Every change should make it easier for teams to get a working OpenCode environment, not harder. Containers should be **minimal**, **secure**, and **reproducible**. Every line in the Containerfile should have a clear purpose.
+**Remember**: opencoder is about **reproducibility** and **ease of setup**. Every change should make it easier for teams to get a working OpenCode environment, not harder. Containers should be **minimal**, **secure**, and **reproducible**. Every line in the Containerfile should have a clear purpose.

@@ -1,12 +1,12 @@
-# OpenCode Harness - Usage Guide
+# opencoder - Usage Guide
 
-This guide covers how to effectively use OpenCode Harness in different environments and workflows.
+This guide covers how to effectively use opencoder in different environments and workflows.
 
 ## Basic Usage
 
 ### Host Environment
 
-After running `./scripts/local-setup.sh`, OpenCode is available globally with the harness configuration installed:
+After running `./scripts/local-setup.sh`, OpenCode is available globally with the opencoder configuration installed:
 
 ```bash
 # Basic OpenCode commands
@@ -14,11 +14,11 @@ opencode --version
 opencode --help
 opencode  # Start interactive TUI
 
-# Start OpenCode with harness configuration
+# Start OpenCode with opencoder configuration
 opencode
 ```
 
-The harness configuration includes these OpenCode plugins:
+The opencoder configuration includes these OpenCode plugins:
 
 - `@tarquinen/opencode-dcp@3.1.13`
 - `cc-safety-net@1.0.6`
@@ -30,13 +30,13 @@ The container comes with OpenCode pre-configured and ready to use:
 
 ```bash
 # Check installation
-podman run -it --rm opencode-harness opencode --version
+podman run -it --rm opencoder opencode --version
 
 # Interactive session
-podman run -it --rm opencode-harness
+podman run -it --rm opencoder
 
 # Run specific commands
-podman run --rm opencode-harness opencode --help
+podman run --rm opencoder opencode --help
 ```
 
 ## Development Workflows
@@ -50,18 +50,18 @@ Mount your project directory to work on existing codebases:
 podman run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  opencode-harness bash
+  opencoder bash
 
 # Direct command execution
 podman run --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  opencode-harness opencode --version
+  opencoder opencode --version
 ```
 
 ### Multi-Agent Orchestration
 
-The harness includes oh-my-openagent for sophisticated multi-agent workflows:
+The opencoder includes oh-my-openagent for sophisticated multi-agent workflows:
 
 ```bash
 # Start orchestration session
@@ -101,7 +101,7 @@ podman run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
   --name opencode-dev \
-  opencode-harness bash
+  opencoder bash
 
 # Inside container
 opencode --version
@@ -116,7 +116,7 @@ podman run -dit \
   -v $(pwd):/workspace \
   -w /workspace \
   --name my-opencode-env \
-  opencode-harness
+  opencoder
 
 # Attach to existing container
 podman exec -it my-opencode-env bash
@@ -144,11 +144,11 @@ jobs:
 
       - name: Check OpenCode version
         run: |
-          podman pull ghcr.io/tankdonut/opencode-harness:latest
+          podman pull ghcr.io/tankdonut/opencoder:latest
           podman run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            ghcr.io/tankdonut/opencode-harness:latest \
+            ghcr.io/tankdonut/opencoder:latest \
             opencode --version
 ```
 
@@ -157,7 +157,7 @@ jobs:
 ```yaml
 check-opencode:
   stage: test
-  image: ghcr.io/tankdonut/opencode-harness:latest
+  image: ghcr.io/tankdonut/opencoder:latest
   script:
     - opencode --version
   only:
@@ -171,31 +171,31 @@ check-opencode:
 
 ```bash
 # Team members use same container version
-podman pull ghcr.io/tankdonut/opencode-harness:v1.0.0
+podman pull ghcr.io/tankdonut/opencoder:v1.0.0
 
 # Shared configuration via mounted configs
 podman run -it --rm \
   -v $(pwd):/workspace \
   -v ~/team-opencode-config:/config \
   -w /workspace \
-  opencode-harness
+  opencoder
 ```
 
 **Workspace mount:**
 
 ```bash
-# Mount a project workspace with the harness configuration
+# Mount a project workspace with the opencoder configuration
 podman run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  opencode-harness
+  opencoder
 ```
 
 ## Plugin Management
 
 ### Updating Plugins
 
-The harness uses git submodules for plugin management:
+The opencoder uses git submodules for plugin management:
 
 ```bash
 # Update all plugins to latest
@@ -238,7 +238,7 @@ git commit -m "update: everything-claude-code plugin"
 # Add new plugin as submodule
 git submodule add https://github.com/example/opencode-plugin.git build/modules/my-plugin
 
-# Update the harness OpenCode configuration
+# Update the opencoder OpenCode configuration
 jq '.plugin += ["my-plugin"]' build/.opencode/opencode.json > tmp.json && mv tmp.json build/.opencode/opencode.json
 
 # Rebuild container if using container deployment
@@ -279,7 +279,7 @@ podman run -it --rm \
   --memory=4g \
   --cpus=2 \
   -v $(pwd):/workspace \
-  opencode-harness
+  opencoder
 ```
 
 **Volume optimization:**
@@ -289,7 +289,7 @@ podman run -it --rm \
 podman run -it --rm \
   --mount type=bind,source=$(pwd),target=/workspace \
   -w /workspace \
-  opencode-harness
+  opencoder
 ```
 
 ### Caching Strategies
@@ -298,7 +298,7 @@ podman run -it --rm \
 
 ```bash
 # Build with tag
-./scripts/build.sh --tag opencode-harness
+./scripts/build.sh --tag opencoder
 ```
 
 **Plugin caching:**
@@ -328,7 +328,7 @@ podman run -it --rm \
 1. **Regular updates:**
 
    ```bash
-   # Update harness
+   # Update opencoder
    git pull origin main
    git submodule update --remote --recursive
 
@@ -380,5 +380,5 @@ podman run -it --rm \
 ## Getting Help
 
 - **Documentation**: Check [DEVELOPMENT.md](../../DEVELOPMENT.md) for development-specific usage
-- **Issues**: Report problems on [GitHub Issues](https://github.com/tankdonut/opencode-harness/issues)
+- **Issues**: Report problems on [GitHub Issues](https://github.com/tankdonut/opencoder/issues)
 - **Community**: Join discussions for user support and tips

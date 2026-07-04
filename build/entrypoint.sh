@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# OpenCode Harness - Container Bootstrap Script
+# opencoder - Container Bootstrap Script
 #
 # This script runs inside the container to set up OpenCode with all plugins.
 # It validates configurations, installs dependencies, and verifies the installation.
@@ -466,7 +466,7 @@ verify_installation() {
 print_summary() {
     log ""
     log "========================================="
-    log "  OpenCode Harness Bootstrap Complete"
+    log "  opencoder Bootstrap Complete"
     log "========================================="
     log ""
     log "OpenCode Version: $(opencode --version 2>/dev/null | head -n1 || echo 'unknown')"
@@ -482,7 +482,7 @@ print_summary() {
 
 # Main execution
 main() {
-    log "Starting OpenCode Harness bootstrap..."
+    log "Starting opencoder bootstrap..."
     log ""
 
     validate_environment || exit 1

@@ -1,6 +1,6 @@
-# Contributing to OpenCode Harness
+# Contributing to opencoder
 
-Thank you for considering contributing to OpenCode Harness! This project aims to make OpenCode environment bootstrapping simple and reliable for teams.
+Thank you for considering contributing to opencoder! This project aims to make OpenCode environment bootstrapping simple and reliable for teams.
 
 ## How to Contribute
 
@@ -76,4 +76,4 @@ By contributing, you agree that your contributions will be licensed under the [M
 
 ---
 
-**Remember**: This harness is about reproducibility and ease of setup. Every change should make it easier for teams to get a working OpenCode environment.
+**Remember**: opencoder is about reproducibility and ease of setup. Every change should make it easier for teams to get a working OpenCode environment.

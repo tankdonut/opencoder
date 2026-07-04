@@ -168,7 +168,7 @@ setup_opencode_config() {
 
     if [[ -f "${opencode_dir}/config.json" ]]; then
         log_warn "OpenCode config already exists at ${opencode_dir}/config.json"
-        log_info "Current harness config: ${CONFIG_PATH}"
+        log_info "Current opencoder config: ${CONFIG_PATH}"
         log_info "You may want to merge these configs manually"
     else
         log_info "Copying config to ${opencode_dir}/config.json"
@@ -192,7 +192,7 @@ verify_installation() {
 print_summary() {
     echo ""
     echo "========================================="
-    echo "  OpenCode Harness Setup Complete"
+    echo "  opencoder Setup Complete"
     echo "========================================="
     echo ""
     echo "✓ Prerequisites checked"
@@ -216,7 +216,7 @@ print_usage() {
     cat <<EOF
 Usage: $0 [OPTIONS]
 
-OpenCode Harness Setup Script
+opencoder Setup Script
 
 OPTIONS:
     --skip-submodules    Skip git submodule initialization
@@ -268,7 +268,7 @@ main() {
         esac
     done
 
-    log "Starting OpenCode Harness setup..."
+    log "Starting opencoder setup..."
     echo ""
 
     check_prerequisites || exit 1

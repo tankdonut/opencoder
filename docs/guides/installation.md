@@ -1,10 +1,10 @@
-# OpenCode Harness - Agent Installation Guide
+# opencoder - Agent Installation Guide
 
-This guide is specifically for AI assistants and agents who need to understand and install OpenCode Harness.
+This guide is specifically for AI assistants and agents who need to understand and install opencoder.
 
-## What is OpenCode Harness?
+## What is opencoder?
 
-OpenCode Harness is a comprehensive bootstrap environment that bundles three powerful OpenCode plugin ecosystems:
+opencoder is a comprehensive bootstrap environment that bundles three powerful OpenCode plugin ecosystems:
 
 - **everything-claude-code** (16 agents, 65 skills, 40 commands)
 - **oh-my-openagent** (Multi-agent orchestration with 26 tools, 46 hooks)
@@ -13,10 +13,10 @@ OpenCode Harness is a comprehensive bootstrap environment that bundles three pow
 ## Quick Agent Context
 
 ```text
-Project: OpenCode Harness
+Project: opencoder
 Purpose: Containerized bootstrap for OpenCode with production-ready plugins
 Tech Stack: Bash, Docker/Podman, Git submodules, OpenCode JSON config
-Agent Role: OpenCode Harness Engineer
+Agent Role: opencoder Engineer
 ```
 
 ## Installation Options
@@ -27,15 +27,15 @@ Agent Role: OpenCode Harness Engineer
 
 ```bash
 # Pull pre-built container
-podman pull ghcr.io/tankdonut/opencode-harness:latest
-podman run -it --rm ghcr.io/tankdonut/opencode-harness:latest
+podman pull ghcr.io/tankdonut/opencoder:latest
+podman run -it --rm ghcr.io/tankdonut/opencoder:latest
 
 # Or with Docker
-docker pull ghcr.io/tankdonut/opencode-harness:latest
-docker run -it --rm ghcr.io/tankdonut/opencode-harness:latest
+docker pull ghcr.io/tankdonut/opencoder:latest
+docker run -it --rm ghcr.io/tankdonut/opencoder:latest
 
 # Mount workspace for development
-podman run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencode-harness:latest
+podman run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencoder:latest
 ```
 
 ### Option 2: Host Installation
@@ -44,8 +44,8 @@ podman run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencod
 
 ```bash
 # Clone with submodules
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 
 # Run setup script
 ./scripts/local-setup.sh
@@ -60,21 +60,21 @@ opencode --version
 
 ```bash
 # Clone and initialize
-git clone https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone https://github.com/tankdonut/opencoder.git
+cd opencoder
 git submodule update --init --recursive
 
 # Build container
 ./scripts/build.sh
 
 # Test container
-podman run -it --rm opencode-harness bash -c "opencode --version && echo 'Success!'"
+podman run -it --rm opencoder bash -c "opencode --version && echo 'Success!'"
 ```
 
 ## Key Files and Structure
 
 ```text
-opencode-harness/
+opencoder/
 ├── build/                     # Container build files
 │   ├── Containerfile          # Container build definition
 │   ├── entrypoint.sh          # Container entrypoint
@@ -120,7 +120,7 @@ When working with this project, you should understand:
 
 ### Your Role
 
-- **OpenCode Harness Engineer** specializing in:
+- **opencoder Engineer** specializing in:
   - Configuration management
   - Container engineering
   - Git submodule management
@@ -208,9 +208,9 @@ chown -R 1000:1000 /path/to/workspace
 ```bash
 # Full validation workflow
 ./scripts/validate.sh
-./scripts/build.sh --no-cache --tag opencode-harness-test
-./scripts/container-test.sh opencode-harness-test
-podman image scan opencode-harness-test
+./scripts/build.sh --no-cache --tag opencoder-test
+./scripts/container-test.sh opencoder-test
+podman image scan opencoder-test
 ```
 
 ## Next Steps
@@ -231,4 +231,4 @@ After installation:
 
 ---
 
-**Remember:** This harness is about reproducibility and ease of setup. Every change should make it easier for teams to get a working OpenCode environment.
+**Remember:** opencoder is about reproducibility and ease of setup. Every change should make it easier for teams to get a working OpenCode environment.

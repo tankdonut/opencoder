@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ============================================
-# OpenCode Harness Container Image
+# opencoder Container Image
 # ============================================
 # Version is read from .opencode-version at build time.
 # Build: ./scripts/build.sh
@@ -10,7 +10,7 @@
 #
 # Labels are applied post-build via scripts/build.sh
 # Image tags include OpenCode version for traceability:
-#   opencode-harness:latest  - current default
+#   opencoder:latest  - current default
 # ============================================
 
 FROM ghcr.io/tankdonut/tools:latest@sha256:1176ba2e7238077d46df62729794fabaf348c94a8e2580d4ab9fded3fda5162f AS tools

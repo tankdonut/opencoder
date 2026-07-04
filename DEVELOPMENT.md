@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide covers development workflows, testing, troubleshooting, and CI/CD for OpenCode Harness contributors.
+This guide covers development workflows, testing, troubleshooting, and CI/CD for opencoder contributors.
 
 ## Local Testing
 
@@ -11,10 +11,10 @@ Run validation and container tests locally before pushing:
 ./scripts/validate.sh
 
 # Build container
-./scripts/build.sh --tag opencode-harness:test
+./scripts/build.sh --tag opencoder:test
 
 # Run container test suite
-./scripts/container-test.sh opencode-harness:test
+./scripts/container-test.sh opencoder:test
 ```
 
 ## Testing Container Changes
@@ -22,13 +22,13 @@ Run validation and container tests locally before pushing:
 1. **Build without cache**:
 
    ```bash
-   ./scripts/build.sh --tag opencode-harness-test --no-cache
+   ./scripts/build.sh --tag opencoder-test --no-cache
    ```
 
 2. **Run validation tests**:
 
    ```bash
-   podman run -it --rm opencode-harness-test bash -c "
+   podman run -it --rm opencoder-test bash -c "
       opencode --version &&
       cat /etc/opencode/opencode.jsonc &&
       test -f /etc/opencode/opencode.jsonc &&
@@ -40,13 +40,13 @@ Run validation and container tests locally before pushing:
 3. **Run comprehensive test suite**:
 
    ```bash
-   ./scripts/container-test.sh opencode-harness-test
+   ./scripts/container-test.sh opencoder-test
    ```
 
 4. **Scan for vulnerabilities**:
 
    ```bash
-   podman image scan opencode-harness-test
+   podman image scan opencoder-test
    ```
 
 ## Validating Configuration
@@ -91,8 +91,8 @@ This project includes automated CI/CD via GitHub Actions:
 ./scripts/validate.sh
 
 # Build and test like CI does
-./scripts/build.sh --tag opencode-harness:ci
-./scripts/container-test.sh opencode-harness:ci podman
+./scripts/build.sh --tag opencoder:ci
+./scripts/container-test.sh opencoder:ci podman
 ```
 
 ### Using Pre-built Container
@@ -100,8 +100,8 @@ This project includes automated CI/CD via GitHub Actions:
 Pull the latest container from GitHub Container Registry:
 
 ```bash
-podman pull ghcr.io/tankdonut/opencode-harness:latest
-podman run -it --rm ghcr.io/tankdonut/opencode-harness:latest
+podman pull ghcr.io/tankdonut/opencoder:latest
+podman run -it --rm ghcr.io/tankdonut/opencoder:latest
 ```
 
 ### CI Configuration
@@ -204,7 +204,7 @@ EXAMPLES:
 3. Test in container:
 
    ```bash
-   ./scripts/build.sh --tag opencode-harness --no-cache
+   ./scripts/build.sh --tag opencoder --no-cache
    ```
 
 ### Updating Plugins

@@ -1,10 +1,10 @@
-# OpenCode Harness - Detailed Installation Guide
+# opencoder - Detailed Installation Guide
 
-This comprehensive installation guide covers all setup methods for OpenCode Harness across different environments and use cases.
+This comprehensive installation guide covers all setup methods for opencoder across different environments and use cases.
 
 ## Prerequisites
 
-Before installing OpenCode Harness, ensure you have:
+Before installing opencoder, ensure you have:
 
 - **Git**: 2.34+ (required for submodule support)
 - **Node.js**: 20+ (includes npm, required for OpenCode)
@@ -38,12 +38,12 @@ Host installation provides the most flexibility and is recommended for active de
 
 ```bash
 # Option A: Clone with submodules in one command
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 
 # Option B: If already cloned without submodules
-git clone https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone https://github.com/tankdonut/opencoder.git
+cd opencoder
 git submodule update --init --recursive
 ```
 
@@ -114,28 +114,28 @@ Container deployment ensures consistent environments and is ideal for production
 
 ```bash
 # Pull latest pre-built image
-podman pull ghcr.io/tankdonut/opencode-harness:latest
+podman pull ghcr.io/tankdonut/opencoder:latest
 
 # Run interactively
-podman run -it --rm ghcr.io/tankdonut/opencode-harness:latest
+podman run -it --rm ghcr.io/tankdonut/opencoder:latest
 
 # Mount workspace for development
 podman run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  ghcr.io/tankdonut/opencode-harness:latest
+  ghcr.io/tankdonut/opencoder:latest
 
 # Using Docker instead of Podman
-docker pull ghcr.io/tankdonut/opencode-harness:latest
-docker run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencode-harness:latest
+docker pull ghcr.io/tankdonut/opencoder:latest
+docker run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencoder:latest
 ```
 
 #### Option B: Build from Source
 
 ```bash
 # Clone repository
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 
 # Build container image
 ./scripts/build.sh
@@ -144,7 +144,7 @@ cd opencode-harness
 ./scripts/build.sh --runtime docker
 
 # Test the build
-podman run -it --rm opencode-harness bash -c "opencode --version && echo 'Success!'"
+podman run -it --rm opencoder bash -c "opencode --version && echo 'Success!'"
 ```
 
 #### Container Usage Patterns
@@ -156,13 +156,13 @@ podman run -it --rm opencode-harness bash -c "opencode --version && echo 'Succes
 podman run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  opencode-harness bash
+  opencoder bash
 
 # Run specific OpenCode commands
 podman run --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  opencode-harness opencode --help
+  opencoder opencode --help
 ```
 
 **CI/CD integration:**
@@ -172,13 +172,13 @@ podman run --rm \
 podman run --rm \
   -v $GITHUB_WORKSPACE:/workspace \
   -w /workspace \
-  ghcr.io/tankdonut/opencode-harness:latest \
+  ghcr.io/tankdonut/opencoder:latest \
   opencode --version  # Verify opencode works
 ```
 
 ### Method 3: Development Setup
 
-For contributors or advanced users who need to modify the harness itself.
+For contributors or advanced users who need to modify opencoder itself.
 
 #### Development Prerequisites
 
@@ -203,8 +203,8 @@ sudo mv /tmp/hadolint /usr/local/bin/
 
 ```bash
 # Clone for development
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 
 # Set up development environment
 ./scripts/local-setup.sh
@@ -213,11 +213,11 @@ cd opencode-harness
 ./scripts/validate.sh
 
 # Build and test container
-./scripts/build.sh --no-cache --tag opencode-harness-dev
-./scripts/container-test.sh opencode-harness-dev
+./scripts/build.sh --no-cache --tag opencoder-dev
+./scripts/container-test.sh opencoder-dev
 
 # Run security scan
-podman image scan opencode-harness-dev
+podman image scan opencoder-dev
 ```
 
 ## Platform-Specific Instructions
@@ -235,8 +235,8 @@ sudo apt-get install -y git nodejs npm curl jq
 sudo apt-get install -y podman
 
 # Follow main installation steps
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 ./scripts/local-setup.sh
 ```
 
@@ -251,8 +251,8 @@ sudo yum install -y git nodejs npm curl
 # Note: jq and podman may need EPEL repository
 
 # Follow main installation steps
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 ./scripts/local-setup.sh
 ```
 
@@ -266,8 +266,8 @@ cd opencode-harness
 brew install git node jq podman
 
 # Follow main installation steps
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 ./scripts/local-setup.sh
 ```
 
@@ -282,8 +282,8 @@ sudo apt-get install -y git nodejs npm curl jq
 # Follow Ubuntu instructions above
 
 # Clone and setup
-git clone --recurse-submodules https://github.com/tankdonut/opencode-harness.git
-cd opencode-harness
+git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+cd opencoder
 ./scripts/local-setup.sh
 ```
 
@@ -310,8 +310,8 @@ git submodule status
 ./scripts/validate.sh
 
 # Test container functionality
-./scripts/build.sh --tag test-harness
-./scripts/container-test.sh test-harness
+./scripts/build.sh --tag test-opencoder
+./scripts/container-test.sh test-opencoder
 
 # Verify plugin functionality
 # Plugin configuration is in build/.opencode/opencode.json
@@ -357,7 +357,7 @@ npm install -g opencode@latest
 
 After successful installation:
 
-1. **Read the [Usage Guide](usage.md)** to understand how to work with OpenCode Harness
+1. **Read the [Usage Guide](usage.md)** to understand how to work with opencoder
 2. **Review [Configuration Guide](configuration.md)** to customize your setup
 3. **Check [DEVELOPMENT.md](../../DEVELOPMENT.md)** for development workflows
 4. **Explore plugin documentation** in the `build/modules/` directory
@@ -367,6 +367,6 @@ After successful installation:
 If you encounter issues:
 
 1. **Check the [Troubleshooting section](../../DEVELOPMENT.md#troubleshooting)** in DEVELOPMENT.md
-2. **Search existing [GitHub Issues](https://github.com/tankdonut/opencode-harness/issues)**
+2. **Search existing [GitHub Issues](https://github.com/tankdonut/opencoder/issues)**
 3. **Create a new issue** with detailed error messages and system information
 4. **Join our community discussions** for help from other users

@@ -350,7 +350,7 @@ print_usage() {
     cat <<EOF
 Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS]
 
-OpenCode Harness - Pre-build Validation Script
+opencoder - Pre-build Validation Script
 
 Options:
     --fix       Attempt to fix fixable issues (e.g., file permissions)
@@ -372,7 +372,7 @@ main() {
 
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║        OpenCode Harness - Validation Suite                 ║${NC}"
+    echo -e "${BLUE}║        opencoder - Validation Suite                        ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "Project Root: ${PROJECT_ROOT}"

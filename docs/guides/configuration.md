@@ -1,6 +1,6 @@
-# OpenCode Harness - Configuration Guide
+# opencoder - Configuration Guide
 
-OpenCode Harness uses two configuration files to control plugin loading and container behavior. This guide documents their structure and how to modify them.
+opencoder uses two configuration files to control plugin loading and container behavior. This guide documents their structure and how to modify them.
 
 ## Configuration Files Overview
 
@@ -141,16 +141,16 @@ Set a variable to `0`, `false`, or `no` to disable the corresponding module.
 
 ```bash
 # Run without everything-claude-code
-podman run -it --rm -e ECC_ENABLED=false opencode-harness
+podman run -it --rm -e ECC_ENABLED=false opencoder
 
 # Run with only superpowers
 podman run -it --rm \
   -e ECC_ENABLED=false \
   -e OMO_ENABLED=false \
-  opencode-harness
+  opencoder
 
 # Run with everything enabled (default)
-podman run -it --rm opencode-harness
+podman run -it --rm opencoder
 ```
 
 ### OMO Subscription Flags
@@ -175,7 +175,7 @@ Set `OMO_FORCE=yes` to force reinstall of oh-my-opencode regardless of existing 
 git submodule add <plugin-url> build/modules/<plugin-name>
 ```
 
-2. Add the plugin to `build/.opencode/opencode.json` with a pinned version:
+1. Add the plugin to `build/.opencode/opencode.json` with a pinned version:
 
 ```json
 {
@@ -189,7 +189,7 @@ git submodule add <plugin-url> build/modules/<plugin-name>
 }
 ```
 
-3. Rebuild and test:
+1. Rebuild and test:
 
 ```bash
 ./scripts/build.sh --tag test --no-cache

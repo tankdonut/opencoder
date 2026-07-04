@@ -1,4 +1,4 @@
-# OpenCode Harness - CI/CD Pipeline
+# opencoder - CI/CD Pipeline
 # Builds and tests the container on every push and pull request
 
 name: CI
@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: opencode-harness
+  IMAGE_NAME: opencoder
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -112,12 +112,12 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | ${{ env.CONTAINER_CMD }} login ghcr.io -u ${{ github.actor }} --password-stdin
-          ${{ env.CONTAINER_CMD }} tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ghcr.io/${{ github.repository_owner }}/opencode-harness:${{ env.IMAGE_TAG }}
-          ${{ env.CONTAINER_CMD }} tag ${{ env.IMAGE_NAME }}:${{ env.OPENCODE_VERSION }} ghcr.io/${{ github.repository_owner }}/opencode-harness:${{ env.OPENCODE_VERSION }}
-          ${{ env.CONTAINER_CMD }} tag ${{ env.IMAGE_NAME }}:latest ghcr.io/${{ github.repository_owner }}/opencode-harness:latest
-          ${{ env.CONTAINER_CMD }} push ghcr.io/${{ github.repository_owner }}/opencode-harness:${{ env.IMAGE_TAG }}
-          ${{ env.CONTAINER_CMD }} push ghcr.io/${{ github.repository_owner }}/opencode-harness:${{ env.OPENCODE_VERSION }}
-          ${{ env.CONTAINER_CMD }} push ghcr.io/${{ github.repository_owner }}/opencode-harness:latest
+          ${{ env.CONTAINER_CMD }} tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ghcr.io/${{ github.repository_owner }}/opencoder:${{ env.IMAGE_TAG }}
+          ${{ env.CONTAINER_CMD }} tag ${{ env.IMAGE_NAME }}:${{ env.OPENCODE_VERSION }} ghcr.io/${{ github.repository_owner }}/opencoder:${{ env.OPENCODE_VERSION }}
+          ${{ env.CONTAINER_CMD }} tag ${{ env.IMAGE_NAME }}:latest ghcr.io/${{ github.repository_owner }}/opencoder:latest
+          ${{ env.CONTAINER_CMD }} push ghcr.io/${{ github.repository_owner }}/opencoder:${{ env.IMAGE_TAG }}
+          ${{ env.CONTAINER_CMD }} push ghcr.io/${{ github.repository_owner }}/opencoder:${{ env.OPENCODE_VERSION }}
+          ${{ env.CONTAINER_CMD }} push ghcr.io/${{ github.repository_owner }}/opencoder:latest
           echo "✓ Image pushed to GitHub Container Registry with tags: ${{ env.IMAGE_TAG }}, ${{ env.OPENCODE_VERSION }}, latest"
 
   # Summary job

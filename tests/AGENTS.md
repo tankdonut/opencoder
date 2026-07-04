@@ -142,5 +142,5 @@ bash tests/test_bootstrap.sh
 # bash tests/test_bootstrap.sh --verbose
 
 # Run integration tests (CI-equivalent)
-./scripts/container-test.sh opencode-harness:latest
+./scripts/container-test.sh opencoder:latest
 ```

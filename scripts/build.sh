@@ -35,10 +35,10 @@ usage() {
     cat <<EOF
 Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS] [-- RUNTIME_ARGS...]
 
-Build the OpenCode Harness container image.
+Build the opencoder container image.
 
 Options:
-    -t, --tag TAG         Image tag (default: opencode-harness)
+    -t, --tag TAG         Image tag (default: opencoder)
     -r, --runtime RT      Container runtime: podman or docker (default: auto-detect)
         --no-cache        Build without cache
     -h, --help            Show this help message
@@ -47,7 +47,7 @@ Any arguments after -- are passed to the container runtime build command.
 
 Examples:
     $(basename "${BASH_SOURCE[0]}")
-    $(basename "${BASH_SOURCE[0]}") --tag my-harness:v1
+    $(basename "${BASH_SOURCE[0]}") --tag my-opencoder:v1
     $(basename "${BASH_SOURCE[0]}") --runtime docker --no-cache
 EOF
 }
@@ -64,7 +64,7 @@ detect_runtime() {
 }
 
 parse_args() {
-    TAG="opencode-harness"
+    TAG="opencoder"
     RUNTIME=""
     NO_CACHE=false
     PASSTHROUGH_ARGS=()
@@ -183,12 +183,12 @@ apply_labels() {
     "${RUNTIME}" inspect --type image "${TAG}" &>/dev/null || return
 
     local label_cmd=("${RUNTIME}" "image" "label")
-    label_cmd+=("org.opencontainers.image.title=OpenCode Harness" "${TAG}")
+    label_cmd+=("org.opencontainers.image.title=opencoder" "${TAG}")
     "${label_cmd[@]}" 2>/dev/null || true
 
     "${RUNTIME}" image label "org.opencontainers.image.description=Containerized OpenCode environment with production-ready agents and skills" "${TAG}" 2>/dev/null || true
     "${RUNTIME}" image label "org.opencontainers.image.version=${opencode_version}" "${TAG}" 2>/dev/null || true
-    "${RUNTIME}" image label "org.opencontainers.image.source=https://github.com/tankdonut/opencode-harness" "${TAG}" 2>/dev/null || true
+    "${RUNTIME}" image label "org.opencontainers.image.source=https://github.com/tankdonut/opencoder" "${TAG}" 2>/dev/null || true
     "${RUNTIME}" image label "opencode.version=${opencode_version}" "${TAG}" 2>/dev/null || true
 
     log_success "Labels applied (version: ${opencode_version})"

@@ -1,4 +1,4 @@
-# OpenCode Harness - Pre-commit Hooks
+# opencoder - Pre-commit Hooks
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -134,8 +134,8 @@ ci.yml
 ```bash
 # Full CI-like local run
 ./scripts/validate.sh && \
-./scripts/build.sh --tag opencode-harness:ci --no-cache && \
-./scripts/container-test.sh opencode-harness:ci
+./scripts/build.sh --tag opencoder:ci --no-cache && \
+./scripts/container-test.sh opencoder:ci
 
 # Bump OpenCode version (fetches latest + checksums)
 ./scripts/bump-version.sh --latest

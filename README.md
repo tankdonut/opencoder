@@ -1,20 +1,20 @@
-# OpenCode Harness
+# opencoder
 
-[![CI](https://github.com/tankdonut/opencode-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/tankdonut/opencode-harness/actions/workflows/ci.yml)
-[![Container](https://img.shields.io/badge/container-ghcr.io-blue)](https://github.com/tankdonut/opencode-harness/pkgs/container/opencode-harness)
+[![CI](https://github.com/tankdonut/opencoder/actions/workflows/ci.yml/badge.svg)](https://github.com/tankdonut/opencoder/actions/workflows/ci.yml)
+[![Container](https://img.shields.io/badge/container-ghcr.io-blue)](https://github.com/tankdonut/opencoder/pkgs/container/opencoder)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A comprehensive harness for bootstrapping OpenCode environments with production-ready agents, skills, and commands. Includes containerized deployment for consistent, reproducible setups.
+opencoder bootstraps OpenCode environments with production-ready agents, skills, and commands. Includes containerized deployment for consistent, reproducible setups.
 
 ## Overview
 
-OpenCode Harness bundles three powerful OpenCode plugin ecosystems as git submodules:
+opencoder bundles three powerful OpenCode plugin ecosystems as git submodules:
 
 - **[everything-claude-code](https://github.com/affaan-m/everything-claude-code)** - 16 agents, 65 skills, 40 commands for production workflows
 - **[oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent)** - Multi-agent orchestration system with 26 tools and 46 lifecycle hooks
 - **[superpowers](https://github.com/obra/superpowers)** - Advanced workflow skills (TDD, debugging, git workflows)
 
-This harness provides:
+opencoder provides:
 
 - **Bootstrap automation** - Setup scripts and containerized environments
 - **Plugin ecosystem** - Pre-wired access to 3 major OpenCode plugin collections
@@ -28,8 +28,8 @@ This harness provides:
 Copy and paste this prompt to your LLM agent (Claude Code, Cursor, etc.):
 
 ```text
-Install and configure OpenCode Harness by following the instructions here:
-https://raw.githubusercontent.com/tankdonut/opencode-harness/main/docs/guides/installation.md
+Set up opencode using opencoder by following the instructions here:
+https://raw.githubusercontent.com/tankdonut/opencoder/main/docs/guides/installation.md
 ```
 
 Or read the [Agent Installation Guide](docs/guides/installation.md) - specifically designed for AI assistants with context, role definitions, and technical instructions.
@@ -40,7 +40,7 @@ Or read the [Agent Installation Guide](docs/guides/installation.md) - specifical
 
 - **[Agent Installation Guide](docs/guides/installation.md)** - For AI assistants/agents (includes role definitions and context)
 - **[Detailed Installation Guide](docs/guides/installation-detailed.md)** - Comprehensive installation for all platforms and use cases
-- **[Usage Guide](docs/guides/usage.md)** - How to use OpenCode Harness in different environments
+- **[Usage Guide](docs/guides/usage.md)** - How to use opencoder in different environments
 - **[Configuration Guide](docs/guides/configuration.md)** - Complete configuration reference
 
 ### Development & Contributing
@@ -71,10 +71,10 @@ This project is licensed under the [MIT License](LICENSE). Individual plugin mod
 
 For issues related to:
 
-- **This harness**: Open an issue in this repository
+- **opencoder**: Open an issue in this repository
 - **Specific plugins**: Open issues in their respective repositories
 - **OpenCode itself**: Check [OpenCode documentation](https://opencode.ai/docs)
 
 ---
 
-**Remember**: This harness is about reproducibility and ease of setup. Every change should make it easier for teams to get a working OpenCode environment.
+**Remember**: opencoder is about reproducibility and ease of setup. Every change should make it easier for teams to get a working OpenCode environment.

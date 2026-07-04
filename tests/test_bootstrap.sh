@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# OpenCode Harness - Bootstrap Helper Function Tests
+# opencoder - Bootstrap Helper Function Tests
 #
 # TDD tests for bootstrap helper functions. These tests will FAIL initially
 # because the functions don't exist yet - that's expected in TDD methodology.

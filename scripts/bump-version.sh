@@ -38,7 +38,7 @@ print_usage() {
     cat <<EOF
 Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS] [VERSION]
 
-OpenCode Harness - Version Bump Script
+opencoder - Version Bump Script
 
 Bumps the OpenCode version in build/.opencode-version and updates
 SHA256 checksums in build/.opencode-checksums by fetching release

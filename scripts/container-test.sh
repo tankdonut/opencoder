@@ -4,7 +4,7 @@ set -euo pipefail
 
 # shellcheck disable=SC2155
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-readonly IMAGE_NAME="${1:-opencode-harness:latest}"
+readonly IMAGE_NAME="${1:-opencoder:latest}"
 readonly CONTAINER_RUNTIME="${2:-podman}"
 readonly TEST_WORKSPACE="/tmp/opencode-test-$$"
 
@@ -52,19 +52,19 @@ print_usage() {
     cat <<EOF
 Usage: ${SCRIPT_NAME} <image_name> [container_runtime]
 
-OpenCode Harness Container Test Script
+opencoder Container Test Script
 
 Arguments:
-    image_name          Container image to test (e.g., opencode-harness:latest)
+    image_name          Container image to test (e.g., opencoder:latest)
     container_runtime   Container runtime to use (default: podman, fallback: docker)
 
 Options:
     -h, --help          Show this help message
 
 Examples:
-    ${SCRIPT_NAME} opencode-harness:latest
-    ${SCRIPT_NAME} opencode-harness:abc123 podman
-    ${SCRIPT_NAME} opencode-harness:latest docker
+    ${SCRIPT_NAME} opencoder:latest
+    ${SCRIPT_NAME} opencoder:abc123 podman
+    ${SCRIPT_NAME} opencoder:latest docker
 
 Exit Codes:
     0   All tests passed
@@ -566,7 +566,7 @@ main() {
 
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║        OpenCode Harness - Container Test Suite             ║${NC}"
+    echo -e "${BLUE}║        opencoder - Container Test Suite                    ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "Image:            ${IMAGE_NAME}"

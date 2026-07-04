@@ -12,6 +12,7 @@ Do NOT duplicate content between them. `installation.md` stays terse; `installat
 ## Version Source of Truth
 
 **NEVER hardcode plugin or OpenCode versions in prose.** Reference the SoT instead:
+
 - Plugins → `build/.opencode/opencode.json`
 - OpenCode release → `build/.opencode-version`
 - Checksums → `build/.opencode-checksums`

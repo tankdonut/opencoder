@@ -153,8 +153,8 @@ bash -c 'source build/entrypoint.sh && type derive_config_dir'
 
 # Check which modules will be enabled
 ECC_ENABLED=0 OMO_ENABLED=1 SUPERPOWERS_ENABLED=no \
-  podman run --rm opencode-harness -c 'echo enabled modules listed in summary'
+  podman run --rm opencoder -c 'echo enabled modules listed in summary'
 
 # Force re-bootstrap (overwrite existing config)
-podman run -e OPENCODE_BOOTSTRAP_FORCE=1 --rm opencode-harness
+podman run -e OPENCODE_BOOTSTRAP_FORCE=1 --rm opencoder
 ```
