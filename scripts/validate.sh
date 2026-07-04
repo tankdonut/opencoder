@@ -194,7 +194,7 @@ validate_containerfile() {
 
     # Check for best practices
     local checks=(
-        "FROM.*ubuntu:25.10:Base image uses pinned version"
+        "FROM.*ubuntu:26.04:Base image uses pinned version"
         "FROM.*@sha256:.*AS tools:Builder image uses SHA digest"
         "COPY.*\.opencode-checksums:Copies checksums file for verification"
         "sha256sum -c:Verifies SHA256 checksum of downloaded tarball"

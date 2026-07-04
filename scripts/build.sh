@@ -41,7 +41,6 @@ Options:
     -t, --tag TAG         Image tag (default: opencode-harness)
     -r, --runtime RT      Container runtime: podman or docker (default: auto-detect)
         --no-cache        Build without cache
-        --load            Load image into local registry after build (for multi-stage)
     -h, --help            Show this help message
 
 Any arguments after -- are passed to the container runtime build command.

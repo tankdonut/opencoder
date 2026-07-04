@@ -293,7 +293,7 @@ test_bootstrap_copies_assets() {
         bash -c 'exit 0' 2>/dev/null || true
 
     # Check for asset directories
-    local asset_dirs=("skills" "agents" "commands")
+    local asset_dirs=("skills")
     local found_count=0
 
     for asset_dir in "${asset_dirs[@]}"; do
@@ -314,7 +314,7 @@ test_bootstrap_copies_assets() {
     if [[ "${found_count}" -gt 0 ]]; then
         log_pass "Bootstrap copied ${found_count}/${#asset_dirs[@]} asset types"
     else
-        log_skip "No asset directories found (modules may not include skills/agents/commands)"
+        log_skip "No asset directories found (modules may not include skills)"
     fi
 
     rm -rf "${test_dir}"
@@ -488,8 +488,12 @@ test_entrypoint() {
         log_fail "Entrypoint script not executable or missing"
     fi
 
-    # Test entrypoint runs without errors (it already ran during build)
-    log_pass "Entrypoint executed during build (container image is valid)"
+    # Test entrypoint runs to completion at container start (NOT during build)
+    if ${CONTAINER_RUNTIME} run --rm "${IMAGE_NAME}" bash -c 'exit 0' 2>/dev/null; then
+        log_pass "Entrypoint runs successfully (bootstrap completes, exits 0)"
+    else
+        log_fail "Entrypoint failed during container startup"
+    fi
 }
 
 # Test: Workspace mounting
