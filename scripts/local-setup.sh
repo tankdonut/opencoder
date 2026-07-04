@@ -83,34 +83,6 @@ check_prerequisites() {
     log_info "  - jq: $(jq --version)"
 }
 
-init_submodules() {
-    log "Initializing git submodules..."
-
-    cd "$PROJECT_ROOT"
-
-    if [[ ! -f ".gitmodules" ]]; then
-        log_warn "No .gitmodules file found, skipping submodule initialization"
-        return 0
-    fi
-
-    git submodule update --init --recursive
-
-    local submodule_count
-    submodule_count=$(git submodule status | wc -l)
-    log_success "Initialized ${submodule_count} git submodules"
-
-    if [[ -d "build/modules" ]]; then
-        log_info "Available plugins:"
-        for module in build/modules/*/; do
-            if [[ -d "$module" ]]; then
-                local module_name
-                module_name=$(basename "$module")
-                log_info "  - ${module_name}"
-            fi
-        done
-    fi
-}
-
 validate_config() {
     log "Validating OpenCode configuration..."
 
@@ -196,7 +168,6 @@ print_summary() {
     echo "========================================="
     echo ""
     echo "✓ Prerequisites checked"
-    echo "✓ Git submodules initialized"
     echo "✓ Configuration validated"
     echo "✓ OpenCode installed"
     echo ""
@@ -219,7 +190,6 @@ Usage: $0 [OPTIONS]
 opencoder Setup Script
 
 OPTIONS:
-    --skip-submodules    Skip git submodule initialization
     --skip-install       Skip OpenCode installation
     --skip-config        Skip OpenCode config setup
     --version VERSION    Install specific OpenCode version (default: ${OPENCODE_VERSION})
@@ -234,16 +204,11 @@ EOF
 }
 
 main() {
-    local skip_submodules=false
     local skip_install=false
     local skip_config=false
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --skip-submodules)
-                skip_submodules=true
-                shift
-                ;;
             --skip-install)
                 skip_install=true
                 shift
@@ -272,12 +237,6 @@ main() {
     echo ""
 
     check_prerequisites || exit 1
-
-    if [[ "$skip_submodules" == false ]]; then
-        init_submodules || exit 1
-    else
-        log_info "Skipping submodule initialization (--skip-submodules)"
-    fi
 
     validate_config || exit 1
 

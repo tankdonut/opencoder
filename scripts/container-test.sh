@@ -213,33 +213,33 @@ test_directory_structure() {
     fi
 }
 
-# Test: Modules directory (submodules)
-test_modules() {
-    log_section "Testing Modules Directory"
+# Test: Baseline skills installed (skills.sh CLI)
+test_skills() {
+    log_section "Testing Baseline Skills"
 
-    # Check if modules directory exists
-    if ! ${CONTAINER_RUNTIME} run --rm "${IMAGE_NAME}" test -d /vendor/modules; then
-        log_skip "Modules directory not found (submodules may not be included)"
+    # Check baseline skills dir exists (installed at build time via skills CLI)
+    if ! ${CONTAINER_RUNTIME} run --rm "${IMAGE_NAME}" test -d /opencode/default/.agents/skills; then
+        log_fail "Baseline skills directory missing: /opencode/default/.agents/skills"
         return
     fi
+    log_pass "Baseline skills directory exists"
 
-    log_pass "Modules directory exists"
+    # Count SKILL.md files (18 baseline skills: OMO + agents-md + create-agentsmd + find-skills + superpowers subset)
+    local skill_count
+    skill_count=$(${CONTAINER_RUNTIME} run --rm "${IMAGE_NAME}" \
+        bash -c 'find /opencode/default/.agents/skills -name SKILL.md 2>/dev/null | wc -l' || echo "0")
 
-    # Check for expected submodules
-    local expected_modules=("everything-claude-code" "oh-my-openagent" "superpowers")
-    local found_count=0
+    if [[ "${skill_count}" -gt 0 ]]; then
+        log_pass "Baseline skills installed: ${skill_count} SKILL.md files"
+    else
+        log_fail "No SKILL.md files found in baseline skills dir"
+    fi
 
-    for module in "${expected_modules[@]}"; do
-        if ${CONTAINER_RUNTIME} run --rm "${IMAGE_NAME}" test -d "/vendor/modules/${module}"; then
-            log_pass "Module found: ${module}"
-            ((found_count++)) || true
-        else
-            log_skip "Module not found: ${module}"
-        fi
-    done
-
-    if [[ "${found_count}" -gt 0 ]]; then
-        log_pass "Found ${found_count}/${#expected_modules[@]} expected modules"
+    # Check skills-lock.json exists
+    if ${CONTAINER_RUNTIME} run --rm "${IMAGE_NAME}" test -f /opencode/default/skills-lock.json; then
+        log_pass "skills-lock.json present"
+    else
+        log_fail "skills-lock.json missing at /opencode/default/skills-lock.json"
     fi
 }
 
@@ -581,7 +581,7 @@ main() {
     test_opencode_installation
     test_configuration
     test_directory_structure
-    test_modules
+    test_skills
     test_bootstrap_creates_config
     test_bootstrap_copies_assets
     test_bootstrap_preserves_existing

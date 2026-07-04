@@ -132,51 +132,41 @@ validate_permissions() {
     done
 }
 
-# Validate git submodules
-validate_submodules() {
-    log_section "Validating Git Submodules"
+# Validate skills lockfile
+validate_skills_lock() {
+    log_section "Validating Skills Lockfile"
 
-    cd "${PROJECT_ROOT}"
+    local lockfile="${PROJECT_ROOT}/build/skills-lock.json"
 
-    # Check if .gitmodules exists
-    if [[ ! -f ".gitmodules" ]]; then
-        log_warn "No .gitmodules file found"
+    if [[ ! -f "$lockfile" ]]; then
+        log_fail "skills-lock.json not found at build/skills-lock.json"
         return 0
     fi
 
-    log_pass ".gitmodules file found"
+    log_pass "skills-lock.json found"
 
-    # Check if submodules are initialized
-    local submodule_status
-    submodule_status=$(git submodule status 2>/dev/null || echo "")
-
-    if [[ -z "${submodule_status}" ]]; then
-        log_warn "No submodules configured"
+    if ! jq empty "$lockfile" 2>/dev/null; then
+        log_fail "skills-lock.json is not valid JSON"
         return 0
     fi
 
-    # Check each submodule
-    while IFS= read -r line; do
-        local status="${line:0:1}"
-        local path="${line:1}"
-        path="${path#* }"
-        path="${path%% *}"
+    log_pass "skills-lock.json is valid JSON"
 
-        case "${status}" in
-            " ")
-                log_pass "Submodule initialized: ${path}"
-                ;;
-            "-")
-                log_fail "Submodule not initialized: ${path}"
-                ;;
-            "+")
-                log_warn "Submodule has changes: ${path}"
-                ;;
-            "U")
-                log_fail "Submodule has merge conflicts: ${path}"
-                ;;
-        esac
-    done <<< "${submodule_status}"
+    local schema_version
+    schema_version=$(jq -r '.version // empty' "$lockfile")
+    if [[ -z "$schema_version" ]]; then
+        log_warn "skills-lock.json missing 'version' field"
+    else
+        log_pass "Lockfile schema version: ${schema_version}"
+    fi
+
+    local skill_count
+    skill_count=$(jq '.skills | keys | length' "$lockfile" 2>/dev/null || echo "0")
+    if [[ "$skill_count" -eq 0 ]]; then
+        log_warn "No skills defined in lockfile"
+    else
+        log_pass "Found ${skill_count} skills in lockfile"
+    fi
 }
 
 # Validate Containerfile
@@ -292,6 +282,7 @@ validate_structure() {
         "build/.opencode/opencode.json"
         "build/.opencode-checksums"
         "build/etc/opencode/opencode.jsonc"
+        "build/skills-lock.json"
         "scripts/local-setup.sh"
         "build/entrypoint.sh"
         "README.md"
@@ -300,7 +291,6 @@ validate_structure() {
 
     local required_dirs=(
         "build/etc"
-        "build/modules"
         "scripts"
     )
 
@@ -383,7 +373,7 @@ main() {
     check_tools || true
     validate_json
     validate_permissions
-    validate_submodules
+    validate_skills_lock
     validate_containerfile
     validate_checksums
     validate_structure
