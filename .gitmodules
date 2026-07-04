@@ -1,9 +1,0 @@
-[submodule "build/modules/everything-claude-code"]
-	path = build/modules/everything-claude-code
-	url = https://github.com/affaan-m/everything-claude-code
-[submodule "build/modules/superpowers"]
-	path = build/modules/superpowers
-	url = https://github.com/obra/superpowers
-[submodule "build/modules/oh-my-openagent"]
-	path = build/modules/oh-my-openagent
-	url = https://github.com/code-yeongyu/oh-my-openagent

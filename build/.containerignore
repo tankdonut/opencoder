@@ -2,3 +2,4 @@
 .opencode/bun.lock
 .opencode/package.json
 .opencode/.gitignore
+.agents/

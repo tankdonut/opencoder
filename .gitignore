@@ -29,6 +29,9 @@ Thumbs.db
 # Oh My OpenAgent
 .omo/
 
+# Skills CLI artifacts (restored from build/skills-lock.json at image build time)
+build/.agents/
+
 # Container Runtime
 *.log
 *.pid

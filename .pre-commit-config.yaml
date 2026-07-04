@@ -24,4 +24,3 @@ repos:
       - id: shellcheck
         name: shellcheck
         args: ["--severity=warning"]
-        exclude: ^build/modules/
