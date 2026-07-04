@@ -12,16 +12,17 @@ OPENCODE_VERSION="$(cat /etc/opencode-version 2>/dev/null | tr -d '[:space:]')" 
 readonly OPENCODE_VERSION
 readonly OPENCODE_THEME="${OPENCODE_THEME:-ayu-dark}"
 readonly CONFIG_PATH="${OPENCODE_CONFIG:-/opencode/default/opencode.json}"
-readonly MODULES_PATH="/vendor/modules"
 readonly VENDOR_BIN="/vendor/bin"
 readonly DEFAULT_CONFIG_SOURCE="/opencode/default/opencode.json"
 readonly DEFAULT_TUI_SOURCE="/opencode/default/tui.json"
 readonly DEFAULT_THEMES_SOURCE="/opencode/default/themes"
+readonly DEFAULT_SKILLS_SOURCE="/opencode/default/.agents/skills"
+readonly SKILLS_CLI_VERSION="1.5.13"
 
-# Module Enable/Disable (default: all enabled, set to 0/false/no to disable)
-# ECC_ENABLED:           everything-claude-code module assets
-# OMO_ENABLED:           oh-my-openagent module assets + oh-my-opencode installation
-# SUPERPOWERS_ENABLED:   superpowers module assets
+# Optional skill sets (installed at runtime, require network)
+# ECC_ENABLED=1:           install everything-claude-code skills
+# SUPERPOWERS_ENABLED=1:   install superpowers skills
+# Both default to disabled. oh-my-openagent skills are always baked in.
 
 # Oh-My-OpenCode (OMO) Installation Options
 # OMO_FORCE: Force reinstallation even if config exists
@@ -60,26 +61,6 @@ log_warn() {
 # Check if command exists
 command_exists() {
     command -v "$1" &>/dev/null
-}
-
-is_module_enabled() {
-    local module_name="${1:-}"
-    local flag_name=""
-    local flag_value=""
-
-    case "$module_name" in
-        everything-claude-code) flag_name="ECC_ENABLED" ;;
-        oh-my-openagent)        flag_name="OMO_ENABLED" ;;
-        superpowers)            flag_name="SUPERPOWERS_ENABLED" ;;
-        *)                      return 0 ;;
-    esac
-
-    flag_value="${!flag_name:-1}"
-
-    case "${flag_value,,}" in
-        0|false|no) return 1 ;;
-        *)          return 0 ;;
-    esac
 }
 
 # =============================================================================
@@ -150,45 +131,6 @@ copy_config() {
     fi
 }
 
-# Copy assets from module directory to config directory
-# Copies skills/, agents/, commands/ directories if they exist
-copy_assets() {
-    local module_path="${1:-}"
-    local config_dir="${2:-}"
-    local force="${OPENCODE_BOOTSTRAP_FORCE:-0}"
-
-    if [[ -z "$module_path" ]] || [[ -z "$config_dir" ]]; then
-        log_error "copy_assets: module_path and config_dir are required"
-        return 1
-    fi
-
-    # Asset directories to copy
-    local asset_dirs=("skills")
-
-    for asset_dir in "${asset_dirs[@]}"; do
-        local source_dir="${module_path}/${asset_dir}"
-
-        # Skip if source doesn't exist
-        if [[ ! -d "$source_dir" ]]; then
-            continue
-        fi
-
-        local dest_dir="${config_dir}/${asset_dir}"
-
-        # Create destination directory if needed
-        if [[ ! -d "$dest_dir" ]]; then
-            mkdir -p "$dest_dir"
-        fi
-
-        # Copy files
-        if [[ "$force" == "1" ]]; then
-            cp -r "${source_dir}/." "${dest_dir}/"
-        else
-            cp -rn "${source_dir}/." "${dest_dir}/"
-        fi
-    done
-}
-
 copy_theme_config() {
     local config_dir="${1:-}"
 
@@ -223,21 +165,6 @@ bootstrap_config() {
     copy_config "$DEFAULT_CONFIG_SOURCE" "$CONFIG_PATH"
     copy_theme_config "$config_dir"
 
-    # Copy assets from all modules
-    if [[ -d "$MODULES_PATH" ]]; then
-        local module module_name
-        for module in "$MODULES_PATH"/*; do
-            if [[ -d "$module" ]]; then
-                module_name=$(basename "$module")
-                if is_module_enabled "$module_name"; then
-                    copy_assets "$module" "$config_dir"
-                else
-                    log "Module ${module_name} disabled, skipping"
-                fi
-            fi
-        done
-    fi
-
     # Sync config to workspace directory for runtime use
     # Ensures /workspace/.config/opencode/opencode.json is managed by
     # the bootstrap process, respecting OPENCODE_BOOTSTRAP_FORCE
@@ -246,18 +173,6 @@ bootstrap_config() {
         create_config_dir "$workspace_config_dir"
         copy_config "$DEFAULT_CONFIG_SOURCE" "${workspace_config_dir}/opencode.json"
         copy_theme_config "$workspace_config_dir"
-
-        if [[ -d "$MODULES_PATH" ]]; then
-            local module module_name
-            for module in "$MODULES_PATH"/*; do
-                if [[ -d "$module" ]]; then
-                    module_name=$(basename "$module")
-                    if is_module_enabled "$module_name"; then
-                        copy_assets "$module" "$workspace_config_dir"
-                    fi
-                fi
-            done
-        fi
     fi
 
     log_success "Configuration bootstrap complete"
@@ -268,11 +183,6 @@ bootstrap_config() {
 # =============================================================================
 
 install_oh_my_opencode() {
-    if ! is_module_enabled "oh-my-openagent"; then
-        log "OMO module disabled"
-        return 0
-    fi
-
     log "Oh-My-OpenCode installation enabled"
 
     # Derive config directory from CONFIG_PATH
@@ -413,28 +323,60 @@ validate_config() {
     log_success "Configuration validation passed"
 }
 
-# Initialize git submodules (if present)
-init_submodules() {
-    log "Checking for git submodules..."
-
-    if [[ ! -d "$MODULES_PATH" ]]; then
-        log_warn "Modules directory not found at $MODULES_PATH, skipping"
+sync_skills() {
+    if [[ ! -d "$DEFAULT_SKILLS_SOURCE" ]]; then
+        log_warn "Baseline skills not found at $DEFAULT_SKILLS_SOURCE, skipping sync"
         return 0
     fi
 
-    cd "$(dirname "$MODULES_PATH")"
+    local workspace_skills="/workspace/.agents/skills"
+    mkdir -p "$workspace_skills"
 
-    if [[ ! -f ".gitmodules" ]]; then
-        log_warn "No .gitmodules file found, skipping submodule init"
-        return 0
+    local force="${OPENCODE_BOOTSTRAP_FORCE:-0}"
+    if [[ "$force" == "1" ]]; then
+        cp -r "${DEFAULT_SKILLS_SOURCE}/." "${workspace_skills}/"
+    else
+        cp -rn "${DEFAULT_SKILLS_SOURCE}/." "${workspace_skills}/"
     fi
 
-    # Initialize and update submodules
-    git submodule update --init --recursive
+    local skill_count
+    skill_count=$(find "$workspace_skills" -name 'SKILL.md' | wc -l)
+    log_success "Synced ${skill_count} skills to workspace"
+}
 
-    local submodule_count
-    submodule_count=$(git submodule status | wc -l)
-    log_success "Initialized ${submodule_count} git submodules"
+install_optional_skills() {
+    local skills_cli="npx --yes skills@${SKILLS_CLI_VERSION}"
+    local installed=0
+
+    local ecc_enabled="${ECC_ENABLED:-0}"
+    case "${ecc_enabled,,}" in
+        1|true|yes)
+            log "Installing everything-claude-code skills..."
+            if (cd /opencode/default && $skills_cli add affaan-m/everything-claude-code --agent opencode --skill '*' --copy -y) >&2; then
+                log_success "everything-claude-code skills installed"
+                installed=1
+            else
+                log_warn "Failed to install everything-claude-code skills (continuing)"
+            fi
+            ;;
+    esac
+
+    local sp_enabled="${SUPERPOWERS_ENABLED:-0}"
+    case "${sp_enabled,,}" in
+        1|true|yes)
+            log "Installing superpowers skills..."
+            if (cd /opencode/default && $skills_cli add obra/superpowers --agent opencode --skill '*' --copy -y) >&2; then
+                log_success "superpowers skills installed"
+                installed=1
+            else
+                log_warn "Failed to install superpowers skills (continuing)"
+            fi
+            ;;
+    esac
+
+    if [[ "$installed" -eq 1 ]]; then
+        sync_skills
+    fi
 }
 
 # Verify installation
@@ -486,13 +428,14 @@ main() {
     log ""
 
     validate_environment || exit 1
-    init_submodules || true
     verify_opencode || exit 1
     bootstrap_config || exit 1
+    sync_skills || true
     validate_config || exit 1
     if ! install_oh_my_opencode; then
         log_warn "Oh-My-OpenCode installation failed (orchestrator features unavailable; container continues)"
     fi
+    install_optional_skills || true
     verify_installation || exit 1
 
     print_summary
