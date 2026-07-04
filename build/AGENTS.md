@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The **sole container build context** for `podman/docker build`. Everything needed to produce the reproducible OCI image lives here: Containerfile, runtime entrypoint, OpenCode version pinning, system config, and the three plugin submodules.
+The **sole container build context** for `podman/docker build`. Everything needed to produce the reproducible OCI image lives here: Containerfile, runtime entrypoint, OpenCode version pinning, system config, and the skills.sh lockfile.
 
 **This directory IS the build context.** `podman build -f build/Containerfile build/` — all `COPY` paths are relative to `build/`.
 
@@ -22,7 +22,7 @@ The **sole container build context** for `podman/docker build`. Everything neede
 | `etc/opencode/opencode.jsonc` | **Runtime behavior** (container-level, JSONC with comments) |
 | `etc/npmrc` | Supply-chain: `min-release-age=7`, `ignore-scripts=true` |
 | `etc/uv/uv.toml` | Supply-chain: `exclude-newer = "7 days"` |
-| `modules/` | 3 git submodules (NEVER modify — see below) |
+| `skills-lock.json` | skills.sh lockfile (18 baseline skills: 12 OMO + agents-md + create-agentsmd + find-skills + 3 superpowers skills) |
 
 ## Two-Tier Config (CRITICAL)
 
@@ -56,7 +56,7 @@ FROM docker.io/library/ubuntu:26.04
 # COPY .opencode-version + .opencode-checksums → /etc/
 # RUN: curl opencode tarball, sha256sum -c verify, extract → /vendor/bin
 # Create non-root user opencode (uid 1001, HOME=/workspace)
-# COPY config, entrypoint, modules
+# COPY config, entrypoint; install skills via skills.sh CLI
 USER opencode
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
@@ -74,12 +74,13 @@ Line 507 guard: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
 ### Bootstrap Flow (main)
 ```
 validate_environment  → check git/node/npm/curl/jq/python3/pip3/yq, PATH
-init_submodules       → git submodule update --init --recursive (|| true — optional)
 verify_opencode       → opencode --version vs /etc/opencode-version
-bootstrap_config      → for each enabled module: copy_config + copy_assets + copy_theme_config
-                       ALSO mirrors to /workspace/.config/opencode/
+bootstrap_config      → copy_config + copy_theme_config
+                      ALSO mirrors to /workspace/.config/opencode/
+sync_skills           → mirror /opencode/default/.agents/skills/ → /workspace/.agents/skills/
 validate_config       → jq empty + plugin count > 0
 install_oh_my_opencode → bunx oh-my-opencode install (7 flags: OMO_CLAUDE/OMO_GEMINI/OMO_COPILOT/OMO_OPENAI/OMO_OPENCODE_GO/OMO_OPENCODE_ZEN/OMO_ZAI_CODING_PLAN; OMO_FORCE=yes forces) (warns on failure, non-fatal)
+install_optional_skills → ECC/superpowers runtime install when ECC_ENABLED/SUPERPOWERS_ENABLED set (network required)
 verify_installation   → final checks
 print_summary
 exec "$@"             → hand off to CMD (/bin/bash) or user args
@@ -89,50 +90,68 @@ exec "$@"             → hand off to CMD (/bin/bash) or user args
 - `derive_config_dir` — resolves config destination based on workspace state
 - `create_config_dir` — mkdir -p with ownership
 - `copy_config` — `cp -n` (no-clobber) unless `OPENCODE_BOOTSTRAP_FORCE=1`
-- `copy_assets` — copies **`skills/` only** from each module (asset_dirs array hardcoded to `("skills")`)
 - `copy_theme_config` — TUI theme setup
-- `is_module_enabled` — checks ECC_ENABLED/OMO_ENABLED/SUPERPOWERS_ENABLED (default: enabled)
+- `sync_skills` — mirrors build-time skills from `/opencode/default/.agents/skills/` into the workspace
+- `install_optional_skills` — runtime installer for ECC/superpowers via skills.sh CLI (gated by `ECC_ENABLED` / `SUPERPOWERS_ENABLED`)
 
 ### Force Flag
 `OPENCODE_BOOTSTRAP_FORCE=1` overwrites existing config. Absent or `0` preserves (uses `cp -n`).
 
 ### Known Tricky Logic
-1. **Line 425**: `cd "$(dirname "$MODULES_PATH")"` changes CWD globally (no subshell) — side-effect leakage
-2. **Line 328**: `${install_cmd} 2>&2 >&2` — unusual redirect, sends all output to stderr (keeps stdout clean)
-3. **Lines 227-261**: `bootstrap_config` iterates modules **twice** (once for `/opencode/default`, once for `/workspace`) — duplicated logic, refactor candidate
-4. **Line 149/187**: `cp -n` / `cp -rn` — GNU cp extensions; won't work on macOS bash 3.2
-5. **Line 79/77**: `${flag_value,,}` (lowercase) and `${!flag_name:-1}` (indirect expansion) — bash 4+ required
+1. **Line 328**: `${install_cmd} 2>&2 >&2` — unusual redirect, sends all output to stderr (keeps stdout clean)
+2. **Lines 227-261**: `bootstrap_config` mirrors config **twice** (once for `/opencode/default`, once for `/workspace`) — duplicated logic, refactor candidate
+3. **Line 149/187**: `cp -n` / `cp -rn` — GNU cp extensions; won't work on macOS bash 3.2
+4. **Line 79/77**: `${flag_value,,}` (lowercase) and `${!flag_name:-1}` (indirect expansion) — bash 4+ required
 
-## Submodule Wiring (3 Distinct Mechanisms)
+## Skills Distribution
+
+Skills ship through two distinct mechanisms, layered on top of the npm plugin loader.
 
 **Do not conflate these:**
 
 | Mechanism | What it does | Source |
 |-----------|-------------|--------|
 | **OpenCode plugin loader** | Fetches npm packages at runtime | `.opencode/opencode.json` plugin[] |
-| **Submodule skills copy** | Bakes `skills/` dirs into config at startup | `entrypoint.sh:copy_assets` from `/vendor/modules/` |
+| **Build-time skills (baseline)** | `oh-my-openagent` skills baked into the image via `npx skills experimental_install` | `skills-lock.json` → `/opencode/default/.agents/skills/` |
+| **Runtime skills (opt-in)** | ECC / superpowers skills fetched at container start | entrypoint `install_optional_skills` via `npx skills add` |
 | **`bunx oh-my-opencode install`** | Installs multi-agent orchestrator | npm package `oh-my-opencode` (NOT `oh-my-openagent`) |
 
-### Plugin ↔ Submodule Mapping (LOOSE)
-| npm package | Submodule | Relationship |
-|-------------|-----------|--------------|
+### Plugin ↔ Skill Source Mapping (LOOSE)
+
+| npm package | Skill source | Relationship |
+|-------------|-------------|--------------|
 | `@tarquinen/opencode-dcp@3.1.13` | — | npm-only |
 | `cc-safety-net@1.0.6` | — | npm-only |
-| `oh-my-openagent@4.12.0` | `modules/oh-my-openagent` | Name overlaps; submodule supplies skills, npm is the plugin |
-| — | `modules/everything-claude-code` | Submodule skills only (not an npm plugin) |
-| — | `modules/superpowers` | Submodule skills only (not an npm plugin) |
+| `oh-my-openagent@4.12.0` | `code-yeongyu/oh-my-openagent` | Name overlaps; skills ship at build time, npm is the plugin |
+| — | `affaan-m/everything-claude-code` | Skills only (opt-in at runtime via `ECC_ENABLED=1`) |
+| — | `obra/superpowers` | Skills only (opt-in at runtime via `SUPERPOWERS_ENABLED=1`) |
 
-**No mechanism verifies submodule SHA matches npm package version.** They can drift independently.
+**Build-time skills are pinned by `skills-lock.json`. Runtime skills fetch whatever the source repo has at start time (no lock).** They can drift independently.
+
+### Adding a Baseline Skill (lockfile)
+
+Run from this `build/` directory:
+
+```bash
+npx skills@1.5.13 add <owner/repo> --skill <name>|'*' --agent opencode --copy -y
+jq '.skills | keys | length' skills-lock.json   # verify count increased
+```
+
+Then rebuild (`./scripts/build.sh --tag test --no-cache`) and commit `skills-lock.json`. See root `AGENTS.md` → Workflow Patterns → Adding a New Baseline Skill for the full step-by-step. Never hand-edit the lockfile.
+
+### Adding a Runtime-Only Skill (opt-in)
+
+Don't touch the lockfile. Add an env-var gate in `entrypoint.sh` `install_optional_skills()` (copy the `ECC_ENABLED`/`SUPERPOWERS_ENABLED` block), document the flag in root `AGENTS.md` Module Toggle table + `docs/guides/configuration.md`. Requires network at container start.
 
 ## Anti-Patterns (build-specific)
 
-- **Don't** modify anything under `modules/` — upstream-managed, never edit
+- **Don't** edit `skills-lock.json` by hand — regenerate it via the skills.sh CLI
 - **Don't** put plugins in `opencode.jsonc` — use `opencode.json`
 - **Don't** run entrypoint.sh at build time (RUN) — it's the ENTRYPOINT, runs at container start
 - **Don't** use `:latest` on final FROM — validate.sh hard-fails this (builder stage `:latest` OK)
 - **Don't** change base image without updating validate.sh:197 pattern AND AGENTS.md
 - **Don't** bump `.opencode-version` without updating `.opencode-checksums` — use `scripts/bump-version.sh`
-- **Don't** extend `copy_assets` array to `("skills" "agents" "commands")` without also updating container-test.sh assertions
+- **Don't** expect runtime skill installs (ECC, superpowers) to work offline — they need network at container start
 
 ## Version Pinning Flow
 
@@ -151,9 +170,9 @@ scripts/bump-version.sh ────┘   atomic updater (GitHub Releases API)
 # Verify entrypoint is sourceable (for tests)
 bash -c 'source build/entrypoint.sh && type derive_config_dir'
 
-# Check which modules will be enabled
-ECC_ENABLED=0 OMO_ENABLED=1 SUPERPOWERS_ENABLED=no \
-  podman run --rm opencoder -c 'echo enabled modules listed in summary'
+# Enable runtime opt-in skills (ECC + superpowers)
+ECC_ENABLED=1 SUPERPOWERS_ENABLED=1 \
+  podman run --rm opencoder -c 'echo optional skills installed in summary'
 
 # Force re-bootstrap (overwrite existing config)
 podman run -e OPENCODE_BOOTSTRAP_FORCE=1 --rm opencoder

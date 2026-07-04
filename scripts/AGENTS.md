@@ -44,7 +44,7 @@ CI forces docker (CONTAINER_CMD=docker, pre-installed on runners)
 check_tools          # jq, git present
 validate_json        # opencode.json valid + $schema + plugin[]
 validate_permissions # local-setup.sh + entrypoint.sh executable (--fix auto-chmods)
-validate_submodules  # .gitmodules present, each submodule initialized
+validate_skills_lock # skills-lock.json exists, valid JSON, has skills
 validate_containerfile  # regex greps: ubuntu:26.04, @sha256:, sha256sum -c, USER opencode, etc.
 validate_checksums   # format ^[0-9a-f]{64}\ \ filename, both arches present
 validate_structure   # required files/dirs exist
@@ -74,7 +74,7 @@ test_required_binaries        test_bootstrap_copies_assets
 test_opencode_installation    test_bootstrap_preserves_existing
 test_configuration            test_bootstrap_force_overwrites
 test_directory_structure      test_user_permissions
-test_modules                  test_environment
+test_skills                   test_environment
 test_entrypoint               test_workspace_mounting
 
 check_prerequisites / cleanup / print_summary / main
@@ -96,7 +96,7 @@ Globals: `BUMP_VERSION`, `BUMP_USE_LATEST`, `BUMP_DRY_RUN`. Source: `github.com/
 Standalone host path — no script-to-script deps. Installs OpenCode via `npm install -g opencode@VERSION`, copies config to `~/.opencode/config.json`.
 ```
 command_exists / check_prerequisites
-init_submodules / validate_config
+validate_config
 install_opencode / setup_opencode_config
 verify_installation / print_summary / main
 ```

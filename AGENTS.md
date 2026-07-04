@@ -2,11 +2,11 @@
 
 ## Overview
 
-This project **bootstraps OpenCode environments**. It bundles three powerful OpenCode plugin ecosystems as git submodules:
+This project **bootstraps OpenCode environments**. It bundles OpenCode plugin ecosystems via the skills.sh CLI:
 
-- **everything-claude-code** - Production-ready agents, skills, hooks, and commands
-- **oh-my-openagent** - Multi-agent orchestration with 26 tools and 46 lifecycle hooks
-- **superpowers** - Advanced workflow skills and commands
+- **oh-my-openagent** - Multi-agent orchestration with 26 tools and 46 lifecycle hooks (installed at build time as the baseline)
+- **everything-claude-code** - Production-ready agents, skills, hooks, and commands (opt-in at runtime)
+- **superpowers** - Advanced workflow skills and commands (opt-in at runtime)
 
 opencoder automates configuration, provides containerized environments, and standardizes OpenCode setups across teams.
 
@@ -42,10 +42,7 @@ opencoder/
 │   │   │   └── opencode.jsonc  # Runtime behavior (autoupdate, permissions, watcher)
 │   │   └── uv/
 │   │       └── uv.toml         # Supply-chain: exclude-newer=7d
-│   └── modules/                # Git submodules (NEVER modify — upstream-managed)
-│       ├── everything-claude-code/ # Enable flag: ECC_ENABLED
-│       ├── oh-my-openagent/       # Enable flag: OMO_ENABLED
-│       └── superpowers/           # Enable flag: SUPERPOWERS_ENABLED
+│   └── skills-lock.json        # skills.sh lockfile (18 baseline skills: OMO + agents-md + create-agentsmd + find-skills + 3 superpowers skills)
 ├── scripts/                    # Host-side automation (see scripts/AGENTS.md)
 │   ├── build.sh                # Container build driver (204L)
 │   ├── bump-version.sh         # OpenCode version + checksum updater (284L)
@@ -73,15 +70,14 @@ opencoder/
 - **Base Image**: Ubuntu 26.04
 - **OpenCode**: v1.0+
 - **Shell**: Bash
-- **Git**: Submodules for plugin management
+- **Skill Distribution**: skills.sh CLI (build-time baseline + runtime opt-in)
 
 ## Commands You Can Use
 
 ### Setup & Installation
 
 ```bash
-# Initialize submodules
-git submodule update --init --recursive
+# Skills are installed automatically during container build (no manual init needed)
 
 # Bootstrap OpenCode on host
 ./scripts/local-setup.sh
@@ -97,18 +93,17 @@ podman run -it --rm opencoder
 docker run -it --rm opencoder
 ```
 
-### Plugin Management
+### Skills Management
 
 ```bash
-# Update submodules to latest
-git submodule update --remote --recursive
+# Install baseline skills from the lockfile (used by Containerfile at build time)
+npx skills@1.5.13 experimental_install
 
-# Add new plugin submodule
-git submodule add <url> build/modules/<name>
+# Add a new skill source at runtime (opt-in skills)
+npx skills@1.5.13 add <owner/repo> --agent opencode --skill '*' --copy -y
 
-# Remove plugin submodule
-git submodule deinit -f build/modules/<name>
-git rm -f build/modules/<name>
+# Update skills-lock.json after changing the skill set
+# (regenerate via skills CLI, then commit the lockfile)
 ```
 
 ### Verification
@@ -117,8 +112,8 @@ git rm -f build/modules/<name>
 # Verify OpenCode config
 cat build/.opencode/opencode.json
 
-# Check submodule status
-git submodule status
+# Verify skills lockfile
+jq . build/skills-lock.json
 
 # Test container build
 ./scripts/build.sh --tag opencoder --no-cache
@@ -179,7 +174,7 @@ You are an **opencoder Engineer** specializing in:
 
 - **Configuration Management**: Setting up OpenCode environments with proper plugin wiring
 - **Container Engineering**: Building reproducible OpenCode containers
-- **Git Submodule Management**: Maintaining plugin dependencies as submodules
+- **Skills Distribution via skills.sh CLI**: Maintaining skill baselines and lockfiles
 - **Bootstrap Automation**: Writing reliable setup scripts for multi-platform environments
 
 Your output: Working OpenCode environments that teams can deploy consistently.
@@ -194,23 +189,17 @@ Your output: Working OpenCode environments that teams can deploy consistently.
 
 set -euo pipefail  # Fail on errors, undefined vars, pipe failures
 
-install_opencode_plugin() {
-    local plugin_name="$1"
-    local plugin_path="build/modules/${plugin_name}"
+install_skill_source() {
+    local repo="$1"
 
-    if [[ ! -d "$plugin_path" ]]; then
-        echo "Error: Plugin not found at $plugin_path" >&2
-        return 1
-    fi
-
-    echo "Installing ${plugin_name}..."
-    # Installation logic here
+    echo "Installing skills from ${repo}..."
+    npx skills@1.5.13 add "$repo" --agent opencode --skill '*' --copy -y
 }
 
 # ❌ Bad - no error handling, unclear names
 install() {
-    cd build/modules/$1
-    # What happens if directory doesn't exist?
+    npx skills add "$1"
+    # What happens if the repo doesn't exist or network fails?
 }
 ```
 
@@ -279,13 +268,12 @@ This project splits OpenCode configuration across **two files with different res
 
 ### Module Toggle Environment Variables
 
-The entrypoint selectively enables each submodule at container start. All default to **enabled**; set to `0`, `false`, or `no` to disable:
+The entrypoint selectively enables each optional skill collection at container start. `oh-my-openagent` is always installed as the build-time baseline; ECC and superpowers default to **disabled** and require network access at runtime. Set to `1`, `true`, or `yes` to enable:
 
 | Env var | Controls |
 |---------|----------|
-| `ECC_ENABLED` | `everything-claude-code` submodule |
-| `OMO_ENABLED` | `oh-my-openagent` submodule |
-| `SUPERPOWERS_ENABLED` | `superpowers` submodule |
+| `ECC_ENABLED` | Runtime install of `everything-claude-code` skills via skills.sh CLI (default: disabled) |
+| `SUPERPOWERS_ENABLED` | Runtime install of `superpowers` skills via skills.sh CLI (default: disabled) |
 
 Additionally, `OMO_CLAUDE` / `OMO_GEMINI` / `OMO_COPILOT` / `OMO_OPENAI` / `OMO_OPENCODE_GO` / `OMO_OPENCODE_ZEN` / `OMO_ZAI_CODING_PLAN` (values: `yes`/`no`/`max20`) pass subscription config to `bunx oh-my-opencode install` at runtime. `OMO_FORCE=yes` forces reinstall.
 
@@ -312,13 +300,12 @@ These match the same 7-day policy. Do not weaken one without weakening all three
 
 ### ✅ Always Do
 
-- **Run `git submodule update --init --recursive`** after cloning or when submodules change
 - **Test container builds** before committing Containerfile changes
 - **Validate JSON** in build/.opencode/opencode.json with `jq` or equivalent
-- **Document new plugins** added to build/modules/ in README.md
+- **Document new skills** in skills-lock.json and README.md
 - **Use `set -euo pipefail`** in all bash scripts
 - **Provide both Podman and Docker** commands (Podman preferred)
-- **Keep submodules at tagged releases** when possible (not random commits)
+- **Pin the skills CLI version** when updating the baseline or lockfile
 - **Pin all versions** - base images, apt packages, npm packages
 - **Verify SHA256 checksums** - OpenCode tarballs are verified against `build/.opencode-checksums` at build time
 - **Update checksums** when changing `build/.opencode-version` - fetch new digests from GitHub Releases API
@@ -329,7 +316,7 @@ These match the same 7-day policy. Do not weaken one without weakening all three
 
 ### ⚠️ Ask First
 
-- **Modifying git submodule URLs** - may break existing clones
+- **Modifying skills-lock.json without testing** - may break builds
 - **Changing base container images** - affects reproducibility
 - **Adding new required dependencies** to Containerfile
 - **Restructuring directory layout** - impacts existing users
@@ -340,8 +327,7 @@ These match the same 7-day policy. Do not weaken one without weakening all three
 
 - **Commit `.opencode/.cache/` or `.opencode/.sessions/`** - these are runtime artifacts
 - **Hardcode API keys or secrets** in any file
-- **Modify files inside `build/modules/` directories** - these are managed by upstream
-- **Use `git submodule update --remote` without testing** - can break on upstream changes
+- **Modify skills-lock.json entries by hand** - use `npx skills` CLI then validate
 - **Remove error handling** from shell scripts (`set -euo pipefail`)
 - **Commit `node_modules/` or `vendor/` directories**
 - **Commit secrets** - No API keys, tokens, passwords in Containerfile or entrypoint.sh
@@ -354,11 +340,50 @@ These match the same 7-day policy. Do not weaken one without weakening all three
 ### Adding a New Plugin
 
 1. Research the plugin's OpenCode compatibility
-2. Add as submodule: `git submodule add <url> build/modules/<name>`
+2. Add the npm-pinned plugin to `build/.opencode/opencode.json` (see config format below)
 3. Update `build/.opencode/opencode.json` to include the plugin
 4. Update README.md with plugin description
 5. Test in container: `./scripts/build.sh --tag test --no-cache`
-6. Commit changes: `git add .gitmodules build/modules/ build/.opencode/opencode.json README.md && git commit -m "feat: add <name> plugin"`
+6. Commit changes: `git add build/.opencode/opencode.json README.md && git commit -m "feat: add <name> plugin"`
+
+### Adding a New Baseline Skill
+
+Baseline skills are baked into the image at build time via `build/skills-lock.json`. Use this for skills every container should ship with.
+
+1. Verify the skill exists on [skills.sh](https://www.skills.sh/) (search the registry)
+2. From the `build/` directory, install the skill into the lockfile:
+
+   ```bash
+   cd build
+   # Single skill from a repo:
+   npx skills@1.5.13 add <owner/repo> --skill <skill-name> --agent opencode --copy -y
+   # Or every skill from a repo (collection-style):
+   npx skills@1.5.13 add <owner/repo> --skill '*' --agent opencode --copy -y
+   ```
+
+3. Verify the lockfile was updated:
+
+   ```bash
+   jq '.skills | keys | length' build/skills-lock.json   # count should increase
+   jq '.skills."<skill-name>"' build/skills-lock.json    # new entry should appear
+   ```
+
+4. Test the container build: `./scripts/build.sh --tag test --no-cache`
+5. Verify the skill landed in the image:
+
+   ```bash
+   podman run --rm test ls /opencode/default/.agents/skills/<skill-name>/
+   podman run --rm test head /opencode/default/.agents/skills/<skill-name>/SKILL.md
+   ```
+
+6. Commit only the lockfile (the `build/.agents/` working dir is gitignored):
+
+   ```bash
+   git add build/skills-lock.json
+   git commit -m "feat(skills): add <skill-name> to baseline"
+   ```
+
+**For large/optional collections** (network-required, shouldn't bloat the image): don't add to the lockfile. Instead wire a runtime opt-in env var in `build/entrypoint.sh` `install_optional_skills()` — copy the `ECC_ENABLED` / `SUPERPOWERS_ENABLED` blocks as a template, document the new flag in the Module Toggle table below and `docs/guides/configuration.md`, then commit `entrypoint.sh` + docs.
 
 ### Updating OpenCode Version
 
@@ -385,23 +410,17 @@ These match the same 7-day policy. Do not weaken one without weakening all three
 5. Verify OpenCode config is loaded correctly
 6. Commit if tests pass
 
-### Troubleshooting Submodule Issues
+### Troubleshooting Skill Installation
 
 ```bash
-# Submodule shows as modified but you didn't change it?
-git submodule status  # Check current commit
-git submodule update  # Reset to tracked commit
+# Skills missing from /opencode/default/.agents/skills/ in the image?
+# Verify the lockfile is valid
+jq . build/skills-lock.json
 
-# Submodule clone failed?
-git submodule sync     # Sync URL from .gitmodules
-git submodule update --init --recursive --force
-
-# Want to update submodule to latest?
-cd build/modules/<name>
-git pull origin main   # Or the default branch
-cd ../..
-git add build/modules/<name>
-git commit -m "chore: update <name> submodule"
+# Optional runtime skills (ECC, superpowers) not installed?
+# They default to disabled and need network access at container start.
+# Enable them with env vars:
+podman run -it --rm -e ECC_ENABLED=1 opencoder
 ```
 
 ## Security Considerations
@@ -409,8 +428,8 @@ git commit -m "chore: update <name> submodule"
 - **Never commit `.env` files** - use `.env.example` templates instead
 - **Pin container base image tags** - `ubuntu:26.04` not `ubuntu:latest`
 - **Scan containers for vulnerabilities** - `podman image scan opencoder`
-- **Validate submodule URLs** - ensure they point to trusted sources
-- **Review upstream changes** before updating submodules
+- **Validate skill sources** - ensure they point to trusted repositories
+- **Review upstream changes** before updating skills
 - **No secrets in images** - API keys and credentials never committed or baked into images
 
 ## Security Checklist
@@ -462,14 +481,6 @@ podman image scan opencoder-test
 
 ## Common Issues
 
-### Submodule Not Found
-
-```bash
-# Symptom: build/modules/xyz is empty
-# Solution:
-git submodule update --init --recursive
-```
-
 ### Container Build Fails
 
 ```bash
@@ -484,9 +495,9 @@ podman pull ghcr.io/tankdonut/tools
 # Symptom: Plugins not loaded
 # Solution: Check opencode.json syntax
 jq . build/.opencode/opencode.json
-# NOTE: npm plugin names (opencode.json) do NOT need to match submodule dir names.
+# NOTE: npm plugin names (opencode.json) do NOT need to match skill source repo names.
 # Only `oh-my-openagent` overlaps. `@tarquinen/opencode-dcp` and `cc-safety-net` are npm-only.
-# `everything-claude-code` and `superpowers` contribute skills via entrypoint's copy_assets, not the plugin list.
+# `everything-claude-code` and `superpowers` contribute skills via skills.sh CLI, not the plugin list.
 ```
 
 ### Bootstrap Script Doesn't Run
@@ -526,7 +537,6 @@ USER opencode
 - [Podman Documentation](https://docs.podman.io/)
 - [Docker Documentation](https://docs.docker.com/)
 - [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
-- [Git Submodules Guide](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
 - [Ubuntu Container Images](https://hub.docker.com/_/ubuntu)
 
 ---
