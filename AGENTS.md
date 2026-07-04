@@ -15,47 +15,60 @@ The harness automates configuration, provides containerized environments, and st
 ```text
 opencode-harness/
 ├── .github/                    # GitHub configuration
-│   ├── dependabot.yml          # Automated dependency updates
-│       └── workflows/              # CI/CD workflows
-│           └── ci.yml              # Main CI pipeline
-├── .pre-commit-config.yaml    # Pre-commit hooks
-├── build/                     # Container build context (all build files)
+│   ├── dependabot.yml          # Dependabot (docker + github-actions ecosystems)
+│   └── workflows/
+│       └── ci.yml              # 3-job pipeline: validate → build-and-test → ci-status
+├── .pre-commit-config.yaml    # Pre-commit hooks (hadolint, shellcheck, hygiene)
+├── .node-version              # Node 24 (CI setup-node reads this)
+├── renovate.json              # Renovate bot (config:recommended, 7-day min release age)
+├── build/                     # Container build context ( sole context for `podman build` )
 │   ├── .containerignore        # Container build exclusions
-│   ├── .opencode-version       # Pinned OpenCode version
-│   ├── .opencode-checksums     # SHA256 checksums for OpenCode tarballs
-│   ├── .opencode/              # OpenCode configuration
-│   │   ├── opencode.json       # Plugin configuration
+│   ├── .opencode-version       # Pinned OpenCode version (single source of truth)
+│   ├── .opencode-checksums     # SHA256 checksums (x64 + arm64 tarballs)
+│   ├── Containerfile           # Multi-stage image def: tools → ubuntu:26.04 → runtime
+│   ├── entrypoint.sh           # Container ENTRYPOINT (509L, real bootstrap logic)
+│   ├── .opencode/              # PROJECT-LEVEL config (plugins only, strict JSON)
+│   │   ├── opencode.json       # OpenCode plugin list (npm-pinned)
+│   │   ├── dcp.json            # Dynamic Context Pruning plugin config (50%/40%)
 │   │   ├── tui.json            # TUI theme configuration
 │   │   └── themes/             # Custom theme files
 │   │       ├── ayu-dark.json
 │   │       ├── lavi.json
 │   │       └── moonlight.json
-│   ├── Containerfile           # Main container definition
-│   ├── entrypoint.sh           # Container entrypoint
-│   ├── etc/                    # Configuration files
-│   │   └── opencode/           # OpenCode system config
-│   │       └── opencode.jsonc  # Container-specific OpenCode config
-│   └── modules/                # Git submodules (OpenCode plugins)
-│       ├── everything-claude-code/ # 16 agents, 65 skills, 40 commands
-│       ├── oh-my-openagent/       # Multi-agent system with Sisyphus orchestrator
-│       └── superpowers/           # Workflow skills (TDD, debugging, git)
-├── scripts/                    # Automation scripts
-│   ├── build.sh                # Container build script
-│   ├── container-test.sh       # Container verification tests
-│   ├── local-setup.sh          # Host bootstrap script
-│   ├── validate.sh             # Pre-build validation
-│   └── bump-version.sh         # OpenCode version bumper
-├── tests/                     # Test suite
-│   └── test_bootstrap.sh      # Bootstrap function tests
+│   ├── etc/                    # CONTAINER-LEVEL config (→ /etc/ via `COPY etc/ /etc/`)
+│   │   ├── npmrc               # Supply-chain: min-release-age=7, ignore-scripts=true
+│   │   ├── opencode/
+│   │   │   └── opencode.jsonc  # Runtime behavior (autoupdate, permissions, watcher)
+│   │   └── uv/
+│   │       └── uv.toml         # Supply-chain: exclude-newer=7d
+│   └── modules/                # Git submodules (NEVER modify — upstream-managed)
+│       ├── everything-claude-code/ # Enable flag: ECC_ENABLED
+│       ├── oh-my-openagent/       # Enable flag: OMO_ENABLED
+│       └── superpowers/           # Enable flag: SUPERPOWERS_ENABLED
+├── scripts/                    # Host-side automation (see scripts/AGENTS.md)
+│   ├── build.sh                # Container build driver (204L)
+│   ├── bump-version.sh         # OpenCode version + checksum updater (284L)
+│   ├── container-test.sh       # Post-build integration test suite (594L, CI-run)
+│   ├── local-setup.sh          # Host bootstrap (non-container path)
+│   └── validate.sh             # Pre-build validation (395L, CI-run)
+├── tests/                     # Unit tests (see tests/AGENTS.md)
+│   └── test_bootstrap.sh      # TDD tests for entrypoint helpers (557L, NOT in CI)
+├── docs/guides/               # User-facing markdown guides
+│   ├── configuration.md        # Config reference + module toggle env vars
+│   ├── installation.md         # Agent-optimized install guide
+│   ├── installation-detailed.md # Human-optimized, all-platforms guide
+│   └── usage.md                # Workflows + CI/CD examples
 ├── .gitignore                  # Git exclusions
 ├── AGENTS.md                   # This file
+├── CONTRIBUTING.md             # Contribution guidelines
+├── DEVELOPMENT.md              # Development setup
 └── README.md                   # Project documentation
 ```
 
 ## Tech Stack
 
 - **Container Runtime**: Podman/Docker
-- **Base Image**: Ubuntu 25.10
+- **Base Image**: Ubuntu 26.04
 - **OpenCode**: v1.0+
 - **Shell**: Bash
 - **Git**: Submodules for plugin management
@@ -199,7 +212,7 @@ install() {
 # ✅ Good - multi-stage, explicit versions, clear comments
 FROM ghcr.io/tankdonut/tools AS tools
 
-FROM docker.io/library/ubuntu:25.10
+FROM docker.io/library/ubuntu:26.04
 
 # Install OpenCode dependencies
 RUN apt-get update && apt-get install -y \
@@ -229,9 +242,9 @@ COPY . .
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@3.1.11",
-        "cc-safety-net@0.9.0",
-        "oh-my-openagent@4.0.0"
+        "@tarquinen/opencode-dcp@3.1.13",
+        "cc-safety-net@1.0.6",
+        "oh-my-openagent@4.12.0"
     ]
 }
 ```
@@ -241,6 +254,41 @@ COPY . .
 ```bash
 jq . build/.opencode/opencode.json
 ```
+
+### Two-Tier Config Convention (CRITICAL)
+
+This project splits OpenCode configuration across **two files with different responsibilities**. Editing the wrong one is the most common mistake:
+
+| File | Scope | Format | Purpose | Image path |
+|------|-------|--------|---------|------------|
+| `build/.opencode/opencode.json` | Project-level | Strict JSON | **Plugins only** (npm-pinned) | `/opencode/default/opencode.json` |
+| `build/etc/opencode/opencode.jsonc` | Container-level | JSONC (comments OK) | **Runtime behavior** (autoupdate, permissions, watcher, compaction) | `/etc/opencode/opencode.jsonc` |
+
+- `opencode.jsonc` deliberately OMITS the `plugin` array — a comment in the file points to `opencode.json` as the plugin source.
+- `build/etc/` is copied wholesale via `COPY etc/ /etc/` (Containerfile). To add new system config, drop a file at `build/etc/<path>` mirroring the target `/etc/<path>` — no Containerfile edit needed.
+- The runtime file sets: `autoupdate:false`, `default_agent:"build"`, `instructions:["AGENTS.md"]`, `share:"manual"`, a read-only bash allowlist (everything else requires `ask`), and watcher ignores (`.git`, `node_modules`, `dist`, `build`).
+
+### Module Toggle Environment Variables
+
+The entrypoint selectively enables each submodule at container start. All default to **enabled**; set to `0`, `false`, or `no` to disable:
+
+| Env var | Controls |
+|---------|----------|
+| `ECC_ENABLED` | `everything-claude-code` submodule |
+| `OMO_ENABLED` | `oh-my-openagent` submodule |
+| `SUPERPOWERS_ENABLED` | `superpowers` submodule |
+
+Additionally, `OMO_CLAUDE` / `OMO_GEMINI` / `OMO_COPILOT` / `OMO_OPENAI` (values: `yes`/`no`/`max20`) pass subscription config to `bunx oh-my-opencode install` at runtime.
+
+### Supply-Chain Guardrails
+
+Three coordinated controls enforce a **7-day release embargo** and block lifecycle scripts — present in `build/etc/`, copied to `/etc/` in the image:
+
+- **`build/etc/npmrc`**: `min-release-age=7` + `ignore-scripts=true`
+- **`build/etc/uv/uv.toml`**: `exclude-newer = "7 days"`
+- **`renovate.json`**: `minimumReleaseAge: 7 days`
+
+These match the same 7-day policy. Do not weaken one without weakening all three intentionally.
 
 ## Boundaries & Constraints
 
@@ -279,7 +327,7 @@ jq . build/.opencode/opencode.json
 - **Remove error handling** from shell scripts (`set -euo pipefail`)
 - **Commit `node_modules/` or `vendor/` directories**
 - **Commit secrets** - No API keys, tokens, passwords in Containerfile or entrypoint.sh
-- **Use `latest` tags** - Always pin versions (`ubuntu:25.10` not `ubuntu:latest`)
+- **Use `latest` tags** - Always pin versions (`ubuntu:26.04` not `ubuntu:latest`)
 - **Run as root** - Security risk, creates permission issues
 - **Install unnecessary tools** - Vim, nano, curl (unless required) bloat the image
 
@@ -339,7 +387,7 @@ git commit -m "chore: update <name> submodule"
 ## Security Considerations
 
 - **Never commit `.env` files** - use `.env.example` templates instead
-- **Pin container base image tags** - `ubuntu:25.10` not `ubuntu:latest`
+- **Pin container base image tags** - `ubuntu:26.04` not `ubuntu:latest`
 - **Scan containers for vulnerabilities** - `podman image scan opencode-harness`
 - **Validate submodule URLs** - ensure they point to trusted sources
 - **Review upstream changes** before updating submodules
@@ -416,7 +464,9 @@ podman pull ghcr.io/tankdonut/tools
 # Symptom: Plugins not loaded
 # Solution: Check opencode.json syntax
 jq . build/.opencode/opencode.json
-# Verify plugin names match submodule directory names
+# NOTE: npm plugin names (opencode.json) do NOT need to match submodule dir names.
+# Only `oh-my-openagent` overlaps. `@tarquinen/opencode-dcp` and `cc-safety-net` are npm-only.
+# `everything-claude-code` and `superpowers` contribute skills via entrypoint's copy_assets, not the plugin list.
 ```
 
 ### Bootstrap Script Doesn't Run
@@ -432,9 +482,10 @@ ENTRYPOINT ["/usr/local/bin/entrypoint"]
 
 ```bash
 # Symptom: opencode.json missing in container
-# Solution: COPY it before running entrypoint
+# Solution: COPY it in Containerfile (entrypoint runs at container start, not build time)
 COPY .opencode/opencode.json /opencode/default/opencode.json
-RUN /usr/local/bin/entrypoint
+# The ENTRYPOINT directive (not RUN) triggers bootstrap at `podman run`:
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
 ```
 
 ### Permission Errors in Container
