@@ -139,8 +139,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Check OpenCode version
         run: |
@@ -195,18 +193,16 @@ podman run -it --rm \
 
 ### Updating Plugins
 
-The opencoder uses git submodules for plugin management:
+The opencoder uses the skills.sh CLI for skill distribution. Plugins (npm packages) are pinned in `opencode.json`:
 
 ```bash
-# Update all plugins to latest
-git submodule update --remote --recursive
+# Update plugin versions in opencode.json, then rebuild
+./scripts/build.sh
 
-# Update specific plugin
-cd build/modules/everything-claude-code
-git pull origin main
-cd ../../..
-git add build/modules/everything-claude-code
-git commit -m "update: everything-claude-code plugin"
+# Refresh the skills lockfile (baseline skills)
+npx skills@1.5.13 experimental_install
+git add build/skills-lock.json
+git commit -m "update: refresh skills lockfile"
 
 # Container rebuild needed after plugin updates
 ./scripts/build.sh
@@ -235,11 +231,11 @@ git commit -m "update: everything-claude-code plugin"
 ### Adding Custom Plugins
 
 ```bash
-# Add new plugin as submodule
-git submodule add https://github.com/example/opencode-plugin.git build/modules/my-plugin
+# Add the plugin to opencode.json with a pinned version
+jq '.plugin += ["my-plugin@1.0.0"]' build/.opencode/opencode.json > tmp.json && mv tmp.json build/.opencode/opencode.json
 
-# Update the opencoder OpenCode configuration
-jq '.plugin += ["my-plugin"]' build/.opencode/opencode.json > tmp.json && mv tmp.json build/.opencode/opencode.json
+# Add a new skill source at runtime (opt-in)
+npx skills@1.5.13 add owner/repo --agent opencode --skill '*' --copy -y
 
 # Rebuild container if using container deployment
 ./scripts/build.sh
@@ -249,7 +245,7 @@ jq '.plugin += ["my-plugin"]' build/.opencode/opencode.json > tmp.json && mv tmp
 
 ### Custom Skills Development
 
-Custom skills can be developed following the patterns in the plugin submodules under `build/modules/`.
+Custom skills can be developed following the patterns in the upstream skill repositories linked in the README.
 
 ### Environment Variables
 
@@ -304,8 +300,8 @@ podman run -it --rm \
 **Plugin caching:**
 
 ```bash
-# Cache plugin installations
-# Plugins are cached as git submodules
+# Skills are baked into the image at build time (oh-my-openagent baseline)
+# Optional runtime skills (ECC, superpowers) are fetched on demand
 # No additional caching needed for most use cases
 ```
 
@@ -330,7 +326,6 @@ podman run -it --rm \
    ```bash
    # Update opencoder
    git pull origin main
-   git submodule update --remote --recursive
 
     # Rebuild container
     ./scripts/build.sh
@@ -353,11 +348,14 @@ podman run -it --rm \
 1. **Plugin loading failures:**
 
    ```bash
-   # Verify submodules are initialized
-   git submodule status
+   # Verify plugin config is valid
+   jq . build/.opencode/opencode.json
 
-   # Reinitialize if needed
-   git submodule update --init --recursive
+   # Verify skills lockfile
+   jq . build/skills-lock.json
+
+   # Rebuild from scratch
+   ./scripts/build.sh --no-cache
    ```
 
 2. **Container permission issues:**

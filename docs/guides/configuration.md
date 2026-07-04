@@ -31,7 +31,7 @@ opencoder uses two configuration files to control plugin loading and container b
 - `cc-safety-net@1.0.6` — Safety guardrails for agent operations. Pinned to 1.0.6.
 - `oh-my-openagent@4.12.0` — Multi-agent orchestration with Sisyphus orchestrator. Pinned to 4.12.0.
 
-All plugin versions are pinned. Do not use `@latest` in this file; update versions deliberately when submodules change.
+All plugin versions are pinned. Do not use `@latest` in this file; update versions deliberately.
 
 ### Validation
 
@@ -127,35 +127,34 @@ jq . build/etc/opencode/opencode.jsonc
 
 ## Container Module Control
 
-The entrypoint script (`build/entrypoint.sh`) supports environment variables to enable or disable submodule-based plugins at container startup. All default to enabled.
+The entrypoint script (`build/entrypoint.sh`) supports environment variables to install optional skill collections at container startup. `oh-my-openagent` is always installed at build time; the others default to **disabled** and require network access at runtime.
 
 | Variable | Default | Controls |
 |----------|---------|----------|
-| `ECC_ENABLED` | `true` | everything-claude-code module assets |
-| `OMO_ENABLED` | `true` | oh-my-openagent module assets and oh-my-opencode installation |
-| `SUPERPOWERS_ENABLED` | `true` | superpowers module assets |
+| `ECC_ENABLED` | `false` | Runtime install of `everything-claude-code` skills via skills.sh CLI |
+| `SUPERPOWERS_ENABLED` | `false` | Runtime install of `superpowers` skills via skills.sh CLI |
 
-Set a variable to `0`, `false`, or `no` to disable the corresponding module.
+Set a variable to `1`, `true`, or `yes` to enable the corresponding skill set.
 
 ### Examples
 
 ```bash
-# Run without everything-claude-code
-podman run -it --rm -e ECC_ENABLED=false opencoder
+# Enable everything-claude-code skills
+podman run -it --rm -e ECC_ENABLED=1 opencoder
 
-# Run with only superpowers
+# Enable both optional skill sets
 podman run -it --rm \
-  -e ECC_ENABLED=false \
-  -e OMO_ENABLED=false \
+  -e ECC_ENABLED=1 \
+  -e SUPERPOWERS_ENABLED=1 \
   opencoder
 
-# Run with everything enabled (default)
+# Run with baseline only (default)
 podman run -it --rm opencoder
 ```
 
 ### OMO Subscription Flags
 
-When `OMO_ENABLED=true`, the entrypoint passes subscription flags to `bunx oh-my-opencode install`. Set these to configure which LLM subscriptions to declare:
+The entrypoint passes subscription flags to `bunx oh-my-opencode install` at container start. Set these to configure which LLM subscriptions to declare:
 
 - `OMO_CLAUDE` — Claude subscription (`yes|no|max20`)
 - `OMO_GEMINI` — Gemini subscription (`yes|no`)
@@ -168,12 +167,6 @@ When `OMO_ENABLED=true`, the entrypoint passes subscription flags to `bunx oh-my
 Set `OMO_FORCE=yes` to force reinstall of oh-my-opencode regardless of existing state.
 
 ## Adding Plugins
-
-1. Add the plugin as a git submodule:
-
-```bash
-git submodule add <plugin-url> build/modules/<plugin-name>
-```
 
 1. Add the plugin to `build/.opencode/opencode.json` with a pinned version:
 

@@ -8,18 +8,18 @@ opencoder bootstraps OpenCode environments with production-ready agents, skills,
 
 ## Overview
 
-opencoder bundles three powerful OpenCode plugin ecosystems as git submodules:
+opencoder bundles OpenCode plugin ecosystems via the skills.sh CLI:
 
-- **[everything-claude-code](https://github.com/affaan-m/everything-claude-code)** - 16 agents, 65 skills, 40 commands for production workflows
-- **[oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent)** - Multi-agent orchestration system with 26 tools and 46 lifecycle hooks
-- **[superpowers](https://github.com/obra/superpowers)** - Advanced workflow skills (TDD, debugging, git workflows)
+- **[everything-claude-code](https://github.com/affaan-m/everything-claude-code)** - 16 agents, 65 skills, 40 commands for production workflows (opt-in at runtime)
+- **[oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent)** - Multi-agent orchestration system with 26 tools and 46 lifecycle hooks (installed at build time)
+- **[superpowers](https://github.com/obra/superpowers)** - Advanced workflow skills (TDD, debugging, git workflows) (opt-in at runtime)
 
 opencoder provides:
 
 - **Bootstrap automation** - Setup scripts and containerized environments
-- **Plugin ecosystem** - Pre-wired access to 3 major OpenCode plugin collections
+- **Plugin ecosystem** - Pre-wired access to major OpenCode plugin collections
 - **Agent-ready documentation** - Comprehensive guides designed for AI assistants
-- **Git submodule management** - Easy plugin updates and version control
+- **Skills distribution via skills.sh CLI** - Build-time baseline plus runtime opt-in skills
 
 ## Quick Start
 
@@ -56,16 +56,11 @@ Or read the [Agent Installation Guide](docs/guides/installation.md) - specifical
 - [Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent)
 - [Superpowers](https://github.com/obra/superpowers)
 - [Podman Documentation](https://docs.podman.io/)
-- [Git Submodules Guide](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
 - [GitHub AGENTS.md Best Practices](https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/)
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). Individual plugin modules are licensed under their respective licenses:
-
-- **everything-claude-code**: See [LICENSE](build/modules/everything-claude-code/LICENSE)
-- **oh-my-openagent**: See [LICENSE](build/modules/oh-my-openagent/LICENSE)
-- **superpowers**: See [LICENSE](build/modules/superpowers/LICENSE)
+This project is licensed under the [MIT License](LICENSE). Individual plugin and skill sources are licensed under their respective licenses in their upstream repositories.
 
 ## Support
 

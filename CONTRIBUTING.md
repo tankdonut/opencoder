@@ -43,7 +43,7 @@ Before submitting a PR:
 
 ## What We're Looking For
 
-- **Plugin integrations**: New OpenCode plugins as submodules
+- **Plugin integrations**: New OpenCode plugins and skill sources
 - **Container improvements**: Better security, smaller images, faster builds
 - **Documentation**: Clear guides and examples
 - **Testing**: Better validation and test coverage

@@ -4,18 +4,18 @@ This guide is specifically for AI assistants and agents who need to understand a
 
 ## What is opencoder?
 
-opencoder is a comprehensive bootstrap environment that bundles three powerful OpenCode plugin ecosystems:
+opencoder is a comprehensive bootstrap environment that bundles OpenCode plugin ecosystems via the skills.sh CLI:
 
-- **everything-claude-code** (16 agents, 65 skills, 40 commands)
-- **oh-my-openagent** (Multi-agent orchestration with 26 tools, 46 hooks)
-- **superpowers** (Advanced workflow skills: TDD, debugging, git workflows)
+- **oh-my-openagent** (Multi-agent orchestration with 26 tools, 46 hooks) - installed at build time
+- **everything-claude-code** (16 agents, 65 skills, 40 commands) - opt-in at runtime
+- **superpowers** (Advanced workflow skills: TDD, debugging, git workflows) - opt-in at runtime
 
 ## Quick Agent Context
 
 ```text
 Project: opencoder
 Purpose: Containerized bootstrap for OpenCode with production-ready plugins
-Tech Stack: Bash, Docker/Podman, Git submodules, OpenCode JSON config
+Tech Stack: Bash, Docker/Podman, skills.sh CLI, OpenCode JSON config
 Agent Role: opencoder Engineer
 ```
 
@@ -43,8 +43,8 @@ podman run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencod
 **For permanent setup or development:**
 
 ```bash
-# Clone with submodules
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+# Clone the repository
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 
 # Run setup script
@@ -59,10 +59,9 @@ opencode --version
 **For customization or development:**
 
 ```bash
-# Clone and initialize
+# Clone the repository
 git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
-git submodule update --init --recursive
 
 # Build container
 ./scripts/build.sh
@@ -82,10 +81,7 @@ opencoder/
 │   ├── .opencode-checksums    # SHA256 checksums
 │   ├── .opencode/             # OpenCode configuration
 │   ├── etc/                   # System config files
-│   └── modules/               # Git submodules
-│       ├── everything-claude-code/
-│       ├── oh-my-openagent/
-│       └── superpowers/
+│   └── skills-lock.json       # skills.sh lockfile (oh-my-openagent baseline)
 ├── .pre-commit-config.yaml   # Pre-commit hooks
 ├── scripts/
 │   ├── local-setup.sh         # Host installation script
@@ -123,13 +119,13 @@ When working with this project, you should understand:
 - **opencoder Engineer** specializing in:
   - Configuration management
   - Container engineering
-  - Git submodule management
+  - Skills distribution via skills.sh CLI
   - Bootstrap automation
 
 ### Key Responsibilities
 
 - Setting up reproducible OpenCode environments
-- Managing plugin dependencies as submodules
+- Managing plugins (npm) and skills (skills.sh CLI)
 - Building and testing containerized deployments
 - Writing reliable setup scripts for multi-platform environments
 
@@ -176,12 +172,6 @@ USER opencode
 ```
 
 ## Troubleshooting Common Issues
-
-### Submodules Not Initialized
-
-```bash
-git submodule update --init --recursive
-```
 
 ### Container Build Fails
 

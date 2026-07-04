@@ -6,7 +6,7 @@ This comprehensive installation guide covers all setup methods for opencoder acr
 
 Before installing opencoder, ensure you have:
 
-- **Git**: 2.34+ (required for submodule support)
+- **Git**: 2.34+
 - **Node.js**: 20+ (includes npm, required for OpenCode)
 - **Podman** or **Docker**: For container deployments (optional but recommended)
 - **jq**: For JSON validation and manipulation (optional but recommended)
@@ -34,17 +34,11 @@ jq --version           # Optional but recommended
 
 Host installation provides the most flexibility and is recommended for active development work.
 
-#### Step 1: Clone Repository with Submodules
+#### Step 1: Clone Repository
 
 ```bash
-# Option A: Clone with submodules in one command
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
-cd opencoder
-
-# Option B: If already cloned without submodules
 git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
-git submodule update --init --recursive
 ```
 
 #### Step 2: Run Setup Script
@@ -56,7 +50,6 @@ git submodule update --init --recursive
 The setup script will:
 
 - Check all prerequisites and report any missing dependencies
-- Initialize git submodules (everything-claude-code, oh-my-openagent, superpowers)
 - Validate `build/.opencode/opencode.json` syntax and plugin references
 - Install or update OpenCode to the latest compatible version
 - Set up configuration files and permissions
@@ -76,14 +69,6 @@ opencode --help
 ```
 
 #### Troubleshooting Host Installation
-
-**Submodule initialization fails:**
-
-```bash
-# Manually sync and update submodules
-git submodule sync
-git submodule update --init --recursive --force
-```
 
 **OpenCode installation fails:**
 
@@ -134,7 +119,7 @@ docker run -it --rm -v $(pwd):/workspace -w /workspace ghcr.io/tankdonut/opencod
 
 ```bash
 # Clone repository
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 
 # Build container image
@@ -203,7 +188,7 @@ sudo mv /tmp/hadolint /usr/local/bin/
 
 ```bash
 # Clone for development
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 
 # Set up development environment
@@ -235,7 +220,7 @@ sudo apt-get install -y git nodejs npm curl jq
 sudo apt-get install -y podman
 
 # Follow main installation steps
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 ./scripts/local-setup.sh
 ```
@@ -251,7 +236,7 @@ sudo yum install -y git nodejs npm curl
 # Note: jq and podman may need EPEL repository
 
 # Follow main installation steps
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 ./scripts/local-setup.sh
 ```
@@ -266,7 +251,7 @@ cd opencoder
 brew install git node jq podman
 
 # Follow main installation steps
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 ./scripts/local-setup.sh
 ```
@@ -282,7 +267,7 @@ sudo apt-get install -y git nodejs npm curl jq
 # Follow Ubuntu instructions above
 
 # Clone and setup
-git clone --recurse-submodules https://github.com/tankdonut/opencoder.git
+git clone https://github.com/tankdonut/opencoder.git
 cd opencoder
 ./scripts/local-setup.sh
 ```
@@ -299,8 +284,8 @@ opencode --help
 # Verify plugin loading
 grep -E '"plugin":\s*\[' build/.opencode/opencode.json
 
-# Test submodule status
-git submodule status
+# Verify skills lockfile
+jq . build/skills-lock.json
 ```
 
 ### Advanced Verification
@@ -319,13 +304,12 @@ git submodule status
 
 ### Troubleshooting Common Issues
 
-**Git submodule authentication:**
+**Skills install fails at runtime:**
 
 ```bash
-# If submodules fail to clone due to authentication
-git config --global url."https://github.com/".insteadOf git@github.com:
-git submodule sync
-git submodule update --init --recursive
+# Optional runtime skills (ECC, superpowers) need network access.
+# They default to disabled. Enable them with env vars:
+podman run -it --rm -e ECC_ENABLED=1 opencoder
 ```
 
 **Container build failures:**
@@ -360,7 +344,7 @@ After successful installation:
 1. **Read the [Usage Guide](usage.md)** to understand how to work with opencoder
 2. **Review [Configuration Guide](configuration.md)** to customize your setup
 3. **Check [DEVELOPMENT.md](../../DEVELOPMENT.md)** for development workflows
-4. **Explore plugin documentation** in the `build/modules/` directory
+4. **Explore plugin documentation** in their upstream repositories
 
 ## Getting Help
 

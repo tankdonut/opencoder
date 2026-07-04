@@ -69,7 +69,7 @@ shellcheck build/entrypoint.sh scripts/*.sh
 
    ```bash
    git commit -m "feat: add new plugin"
-   git commit -m "fix: resolve submodule issue"
+   git commit -m "fix: resolve config issue"
    git commit -m "chore: update dependencies"
    ```
 
@@ -111,16 +111,6 @@ podman run -it --rm ghcr.io/tankdonut/opencoder:latest
 - Validation: `scripts/validate.sh`
 
 ## Troubleshooting
-
-### Submodules Not Initialized
-
-**Symptom**: `build/modules/` directories are empty
-
-**Solution**:
-
-```bash
-git submodule update --init --recursive
-```
 
 ### Container Build Fails
 
@@ -168,7 +158,6 @@ jq . build/.opencode/opencode.json
 ./scripts/local-setup.sh [OPTIONS]
 
 OPTIONS:
-    --skip-submodules    Skip git submodule initialization
     --skip-install       Skip OpenCode installation
     --skip-config        Skip OpenCode config setup
     --version VERSION    Install specific OpenCode version
@@ -184,13 +173,7 @@ EXAMPLES:
 
 ### Adding Plugins
 
-1. Add plugin as git submodule:
-
-   ```bash
-   git submodule add <plugin-url> build/modules/<plugin-name>
-   ```
-
-2. Update `opencode.json`:
+1. Add the plugin to `opencode.json` with a pinned version:
 
    ```json
    {
@@ -201,30 +184,30 @@ EXAMPLES:
    }
    ```
 
-3. Test in container:
+2. Test in container:
 
    ```bash
    ./scripts/build.sh --tag opencoder --no-cache
    ```
 
-### Updating Plugins
+### Adding Skills
 
-Update all submodules to latest:
+Add a new skill source using the skills.sh CLI:
+
+   ```bash
+   npx skills@1.5.13 add <owner/repo> --agent opencode --skill '*' --copy -y
+   ```
+
+Then commit the updated `build/skills-lock.json`.
+
+### Updating Skills
+
+Regenerate the lockfile and rebuild:
 
 ```bash
-git submodule update --remote --recursive
-git add build/modules/
-git commit -m "chore: update plugin submodules"
-```
-
-Update specific submodule:
-
-```bash
-cd build/modules/<plugin-name>
-git pull origin main
-cd ../../..
-git add build/modules/<plugin-name>
-git commit -m "chore: update <plugin-name>"
+npx skills@1.5.13 experimental_install
+git add build/skills-lock.json
+git commit -m "chore: refresh skills lockfile"
 ```
 
 ## Container Build Options
