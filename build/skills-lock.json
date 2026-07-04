@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "skills": {
+    "agents-md": {
+      "source": "getsentry/skills",
+      "sourceType": "github",
+      "skillPath": "skills/agents-md/SKILL.md",
+      "computedHash": "7ff79d6771cdf3db33606251eb15bbc5203b68a94b036ee471869842118ea02a"
+    },
+    "codex-qa": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/codex-qa/SKILL.md",
+      "computedHash": "4a63b0c916250b008c43378eb218c737bb5ed9198daeb10a6e894fb40296b08d"
+    },
+    "create-agentsmd": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/create-agentsmd/SKILL.md",
+      "computedHash": "bfbdbb76b17cca970d1d624e36ce72b6847860d740581c8865da796c1fef8552"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "781bd6d3f9b19f8c9af6b53d8d0e4876d0183841b565db34ca7092ffa412d111"
+    },
+    "get-unpublished-changes": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/get-unpublished-changes/SKILL.md",
+      "computedHash": "d85fb9d91673b72c1606b446ccdabff2139451b050792f6ab58bc724616c195d"
+    },
+    "github-triage": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/github-triage/SKILL.md",
+      "computedHash": "62578fe6b94b783e9f32b32cbf040be41a12da0334f57bca754d310051ef4d3a"
+    },
+    "hyperplan": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/hyperplan/SKILL.md",
+      "computedHash": "05b23d3f5ec3602779254c84e657710cd9a430e1880b390bff982ebf8f897e91"
+    },
+    "omomomo": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/omomomo/SKILL.md",
+      "computedHash": "b24fb77b51c07fa9f560760a450c4e2f930c89c7c0f1924c21dc2dd9c7ee8de2"
+    },
+    "opencode-qa": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/opencode-qa/SKILL.md",
+      "computedHash": "d8eed1000ab58d86b50dd461e4739e752ff724c882d17d66057d65503a5b4319"
+    },
+    "pre-publish-review": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/pre-publish-review/SKILL.md",
+      "computedHash": "a0e05ad6d52fd81138daed6a4dc2aba320d06e673f416d40df724063ce63e9ed"
+    },
+    "publish": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/publish/SKILL.md",
+      "computedHash": "830bce7fd7b387bffbf6c4500f6be5775e24595d792ee9a29ca52622c5edf376"
+    },
+    "remove-deadcode": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/remove-deadcode/SKILL.md",
+      "computedHash": "35006d391550f87fc8f2358b6ee7c046477d1b9cb2e7d3401f791f576af3287f"
+    },
+    "requesting-code-review": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/requesting-code-review/SKILL.md",
+      "computedHash": "cde520e9118d7e6b74b5ab0123cff2f68d9c07bddb3f82c997753b6126600aed"
+    },
+    "security-research": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/security-research/SKILL.md",
+      "computedHash": "5ecc638e56f060b795b35c2aabe28a40a406c45c24976835d2294b48f8ee3314"
+    },
+    "tech-debt-audit": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/tech-debt-audit/SKILL.md",
+      "computedHash": "fbc1b11d718a51b7f9a5b935fd221064777bcea0b8cb7d8c5e5398ffb966858d"
+    },
+    "using-git-worktrees": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/using-git-worktrees/SKILL.md",
+      "computedHash": "212ad917e5543e84ea3adf4e3fab537675db976fdab05d4de432870e38b49e80"
+    },
+    "work-with-pr": {
+      "source": "code-yeongyu/oh-my-openagent",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/work-with-pr/SKILL.md",
+      "computedHash": "cf2e5cfb1e94f7bd44a3f6b27fe39d6771c97fc2ec1ad6511fa596fdcda484e1"
+    },
+    "writing-skills": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/writing-skills/SKILL.md",
+      "computedHash": "985a2c1a4242d89bd44a0060cd0e2c81ebb3683e820026fa52ccd7213804ce03"
+    }
+  }
+}
