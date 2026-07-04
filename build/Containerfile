@@ -105,7 +105,7 @@ WORKDIR /workspace
 # Copy configuration files
 COPY --chown=opencode:opencode .opencode/ /opencode/default/
 COPY etc/ /etc/
-COPY --chown=opencode:opencode modules/ /vendor/modules/
+COPY --chown=opencode:opencode skills-lock.json /opencode/default/skills-lock.json
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # Environment configuration
@@ -116,6 +116,12 @@ ENV PATH="/vendor/bin:${PATH}" \
     OMO_DISABLE_POSTHOG=1
 
 USER opencode
+
+# Install baseline skills (oh-my-openagent) from skills-lock.json
+# ECC and superpowers skills are installed at runtime via entrypoint.sh (opt-in)
+WORKDIR /opencode/default
+RUN npx --yes skills@1.5.13 experimental_install --agent opencode --copy -y
+WORKDIR /workspace
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
