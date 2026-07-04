@@ -15,6 +15,7 @@ The harness automates configuration, provides containerized environments, and st
 ```text
 opencode-harness/
 ├── .github/                    # GitHub configuration
+│   ├── CODEOWNERS              # Review auto-assignment
 │   ├── dependabot.yml          # Dependabot (docker + github-actions ecosystems)
 │   └── workflows/
 │       └── ci.yml              # 3-job pipeline: validate → build-and-test → ci-status
@@ -62,6 +63,7 @@ opencode-harness/
 ├── AGENTS.md                   # This file
 ├── CONTRIBUTING.md             # Contribution guidelines
 ├── DEVELOPMENT.md              # Development setup
+├── LICENSE                     # Project license
 └── README.md                   # Project documentation
 ```
 
@@ -140,6 +142,11 @@ git submodule status
 ```
 
 ### Container Registry
+
+CI (on push to `main` + `workflow_dispatch`) builds and triple-tags the image at `ghcr.io/tankdonut/opencode-harness`:
+- `:latest` — rolling
+- `:<version>` — from `build/.opencode-version`
+- `:<git-sha>` — exact commit
 
 ```bash
 # Pull pre-built container from GitHub Container Registry
@@ -267,6 +274,7 @@ This project splits OpenCode configuration across **two files with different res
 - `opencode.jsonc` deliberately OMITS the `plugin` array — a comment in the file points to `opencode.json` as the plugin source.
 - `build/etc/` is copied wholesale via `COPY etc/ /etc/` (Containerfile). To add new system config, drop a file at `build/etc/<path>` mirroring the target `/etc/<path>` — no Containerfile edit needed.
 - The runtime file sets: `autoupdate:false`, `default_agent:"build"`, `instructions:["AGENTS.md"]`, `share:"manual"`, a read-only bash allowlist (everything else requires `ask`), and watcher ignores (`.git`, `node_modules`, `dist`, `build`).
+- ⚠️ **Version alignment**: `build/.opencode/tui.json` may carry its own `plugin` array (need not match `opencode.json` 1:1). Rule: any plugin present in BOTH files must use the SAME version. `opencode.json` remains the canonical full list.
 
 ### Module Toggle Environment Variables
 
@@ -278,7 +286,16 @@ The entrypoint selectively enables each submodule at container start. All defaul
 | `OMO_ENABLED` | `oh-my-openagent` submodule |
 | `SUPERPOWERS_ENABLED` | `superpowers` submodule |
 
-Additionally, `OMO_CLAUDE` / `OMO_GEMINI` / `OMO_COPILOT` / `OMO_OPENAI` (values: `yes`/`no`/`max20`) pass subscription config to `bunx oh-my-opencode install` at runtime.
+Additionally, `OMO_CLAUDE` / `OMO_GEMINI` / `OMO_COPILOT` / `OMO_OPENAI` / `OMO_OPENCODE_GO` / `OMO_OPENCODE_ZEN` / `OMO_ZAI_CODING_PLAN` (values: `yes`/`no`/`max20`) pass subscription config to `bunx oh-my-opencode install` at runtime. `OMO_FORCE=yes` forces reinstall.
+
+### Runtime Environment Variables
+
+| Env var | Effect |
+|---------|--------|
+| `OPENCODE_THEME` | Defaults to `ayu-dark` (see `build/.opencode/themes/`) |
+| `OPENCODE_BOOTSTRAP_FORCE` | `1` overwrites existing config at container start (`cp` vs `cp -n`) |
+| `OMO_SEND_ANONYMOUS_TELEMETRY=0` | Disables OMO telemetry collection |
+| `OMO_DISABLE_POSTHOG=1` | Disables PostHog analytics in OMO |
 
 ### Supply-Chain Guardrails
 

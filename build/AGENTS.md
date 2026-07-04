@@ -15,6 +15,7 @@ The **sole container build context** for `podman/docker build`. Everything neede
 | `.opencode-version` | Single source of truth for OpenCode release (currently `1.17.6`) |
 | `.opencode-checksums` | SHA256 for `opencode-linux-{x64,arm64}.tar.gz` — integrity gate |
 | `.containerignore` | Excludes `.opencode/{node_modules,bun.lock,package.json}` from build context |
+| `.opencode/package.json` + `bun.lock` | JS-tooling artifacts for theme/plugin deps (gitignored from build context, NOT shipped) |
 | `.opencode/opencode.json` | **Plugins** (project-level, strict JSON) |
 | `.opencode/dcp.json` | Dynamic Context Pruning config (compress at 50%, floor 40%) |
 | `.opencode/tui.json` + `themes/` | TUI theming (ayu-dark default) |
@@ -31,6 +32,8 @@ The **sole container build context** for `podman/docker build`. Everything neede
 | `etc/opencode/opencode.jsonc` | Container | JSONC | **Runtime** (autoupdate, perms, watcher) | `/etc/opencode/opencode.jsonc` |
 
 **Editing the wrong file is the #1 mistake.** Plugins go in `opencode.json`. Runtime behavior goes in `opencode.jsonc`. The jsonc file has a comment pointing to opencode.json for plugins.
+
+⚠️ **`tui.json` plugin alignment**: `tui.json` has its own `plugin` array — it need NOT match `opencode.json` 1:1, but any plugin present in BOTH files must use the SAME version. `opencode.json` is the canonical full list; `tui.json` may subset it.
 
 ## The `COPY etc/ /etc/` Convention
 
@@ -76,7 +79,7 @@ verify_opencode       → opencode --version vs /etc/opencode-version
 bootstrap_config      → for each enabled module: copy_config + copy_assets + copy_theme_config
                        ALSO mirrors to /workspace/.config/opencode/
 validate_config       → jq empty + plugin count > 0
-install_oh_my_opencode → bunx oh-my-opencode install (7 subscription flags) (|| true — optional)
+install_oh_my_opencode → bunx oh-my-opencode install (7 flags: OMO_CLAUDE/OMO_GEMINI/OMO_COPILOT/OMO_OPENAI/OMO_OPENCODE_GO/OMO_OPENCODE_ZEN/OMO_ZAI_CODING_PLAN; OMO_FORCE=yes forces) (warns on failure, non-fatal)
 verify_installation   → final checks
 print_summary
 exec "$@"             → hand off to CMD (/bin/bash) or user args

@@ -108,9 +108,9 @@ ci.yml
  ├─ validate job:    validate.sh + pre-commit run --all-files + hadolint
  └─ build-and-test:  build.sh → tag (sha, version, latest) → container-test.sh → push ghcr.io (main only)
 ```
-- Triggers: push/PR to main, path-filtered on `build/**`, `scripts/**`, `tests/**`, `ci.yml`, `.pre-commit-config.yaml`
+- Triggers: push to `main`, PR to `main`, `workflow_dispatch`; path-filtered on `build/**`, `scripts/**`, `ci.yml`, `.pre-commit-config.yaml` (note: a `tests/**` filter exists but tests/ has no CI-wired tests → filter matches nothing)
 - `ci-status` job (`if: always()`) fails pipeline if upstream failed
-- Vulnerability scan: `continue-on-error: true` (non-blocking; no-ops on docker runners)
+- Vulnerability scan: `aquasecurity/trivy-action@0.28.0` (ci.yml), image-ref scan, severity CRITICAL/HIGH, `continue-on-error: true` (non-blocking advisory). Docker-compatible — runs in CI and locally.
 
 ## Anti-Patterns (script-specific)
 
@@ -126,9 +126,8 @@ ci.yml
 ## Known Issues
 
 1. **Runtime mismatch**: local prefers podman, CI uses docker — `apply_labels` silently fails in CI
-2. **Base image drift risk**: validate.sh:197 hardcodes `ubuntu:26.04` pattern — update both when bumping base image
-3. **container-test.sh is slow**: ~30 fresh container starts per run (no layer reuse)
-4. **No tests for validate.sh/build.sh/bump-version.sh/local-setup.sh themselves** — only container-test.sh and test_bootstrap.sh exist
+2. **container-test.sh is slow**: ~30 fresh container starts per run (no layer reuse)
+3. **No tests for validate.sh/build.sh/bump-version.sh/local-setup.sh themselves** — only container-test.sh and test_bootstrap.sh exist
 
 ## Quick Reference
 

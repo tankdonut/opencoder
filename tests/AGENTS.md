@@ -23,7 +23,8 @@ bash tests/test_bootstrap.sh
 
 ## Test Architecture
 
-### How It Works (TDD Pattern)
+### How It Works (stub-override pattern)
+"TDD" in the original sense is historical — these are plain unit tests. The mechanism:
 1. Defines **stub functions** for the 4 helpers (all return `1` with `STUB_NOT_IMPLEMENTED`)
 2. **Sources** `../build/entrypoint.sh` (line 208) which **overrides** the stubs with real implementations
 3. entrypoint.sh's `BASH_SOURCE[0] == ${0}` guard (line 507) prevents `main()` from executing during source
