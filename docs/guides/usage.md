@@ -20,9 +20,9 @@ opencode
 
 The harness configuration includes these OpenCode plugins:
 
-- `@tarquinen/opencode-dcp@3.1.11`
-- `cc-safety-net@0.9.0`
-- `oh-my-openagent@4.0.0`
+- `@tarquinen/opencode-dcp@3.1.13`
+- `cc-safety-net@1.0.6`
+- `oh-my-openagent@4.12.0`
 
 ### Container Environment
 
@@ -220,9 +220,9 @@ git commit -m "update: everything-claude-code plugin"
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@3.1.11",
-        "cc-safety-net@0.9.0",
-        "oh-my-openagent@4.0.0"
+        "@tarquinen/opencode-dcp@3.1.13",
+        "cc-safety-net@1.0.6",
+        "oh-my-openagent@4.12.0"
     ]
 }
 ```

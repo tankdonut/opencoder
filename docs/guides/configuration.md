@@ -7,7 +7,7 @@ OpenCode Harness uses two configuration files to control plugin loading and cont
 | File | Format | Purpose |
 |------|--------|---------|
 | `build/.opencode/opencode.json` | JSON | Project plugin list with pinned versions |
-| `build/etc/opencode/opencode.jsonc` | JSONC | Container runtime config (compaction, permissions, plugins) |
+| `build/etc/opencode/opencode.jsonc` | JSONC | Container runtime config (compaction, permissions, watcher) |
 
 ## Plugin Configuration
 
@@ -18,18 +18,18 @@ OpenCode Harness uses two configuration files to control plugin loading and cont
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@3.1.11",
-        "cc-safety-net@0.9.0",
-        "oh-my-openagent@4.0.0"
+        "@tarquinen/opencode-dcp@3.1.13",
+        "cc-safety-net@1.0.6",
+        "oh-my-openagent@4.12.0"
     ]
 }
 ```
 
 ### Plugins
 
-- `@tarquinen/opencode-dcp@3.1.11` — Distributed context protocol plugin. Pinned to 3.1.11 for reproducibility.
-- `cc-safety-net@0.9.0` — Safety guardrails for agent operations. Pinned to 0.9.0.
-- `oh-my-openagent@4.0.0` — Multi-agent orchestration with Sisyphus orchestrator. Pinned to 4.0.0.
+- `@tarquinen/opencode-dcp@3.1.13` — Distributed context protocol plugin. Pinned to 3.1.13 for reproducibility.
+- `cc-safety-net@1.0.6` — Safety guardrails for agent operations. Pinned to 1.0.6.
+- `oh-my-openagent@4.12.0` — Multi-agent orchestration with Sisyphus orchestrator. Pinned to 4.12.0.
 
 All plugin versions are pinned. Do not use `@latest` in this file; update versions deliberately when submodules change.
 
@@ -92,11 +92,6 @@ This file is copied to `/etc/opencode/opencode.jsonc` inside the container and c
             "which": "allow"
         }
     },
-    // OpenCode plugins to load inside the container
-    "plugin": [
-        "opencode-beads",
-        "@tarquinen/opencode-dcp@latest"
-    ],
     // Sharing behavior for sessions (manual = explicit user action required)
     "share": "manual",
     // File watcher configuration for workspace awareness
@@ -121,7 +116,6 @@ This file is copied to `/etc/opencode/opencode.jsonc` inside the container and c
 - **`default_agent: "build"`** — Uses the `build` agent profile by default in the container.
 - **`instructions: ["AGENTS.md"]`** — Loads project instructions into every agent session.
 - **`permission`** — All file edits and writes require confirmation (`"ask"`). Read-only bash commands (`ls`, `cat`, `git log`, etc.) are auto-allowed. Everything else prompts.
-- **`plugin`** — Container uses a different plugin set than the project config. `opencode-beads` and `@tarquinen/opencode-dcp@latest` are loaded at runtime.
 - **`share: "manual"`** — Sessions are never shared without explicit user action.
 - **`watcher.ignore`** — Excludes `.git`, `node_modules`, `dist`, and `build` directories from file watching.
 
@@ -167,6 +161,11 @@ When `OMO_ENABLED=true`, the entrypoint passes subscription flags to `bunx oh-my
 - `OMO_GEMINI` — Gemini subscription (`yes|no`)
 - `OMO_COPILOT` — GitHub Copilot subscription (`yes|no`)
 - `OMO_OPENAI` — OpenAI subscription (`yes|no`)
+- `OMO_OPENCODE_GO` — OpenCode Go subscription (`yes|no`)
+- `OMO_OPENCODE_ZEN` — OpenCode Zen subscription (`yes|no`)
+- `OMO_ZAI_CODING_PLAN` — ZAI Coding Plan subscription (`yes|no`)
+
+Set `OMO_FORCE=yes` to force reinstall of oh-my-opencode regardless of existing state.
 
 ## Adding Plugins
 
@@ -182,9 +181,9 @@ git submodule add <plugin-url> build/modules/<plugin-name>
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@3.1.11",
-        "cc-safety-net@0.9.0",
-        "oh-my-openagent@4.0.0",
+        "@tarquinen/opencode-dcp@3.1.13",
+        "cc-safety-net@1.0.6",
+        "oh-my-openagent@4.12.0",
         "<new-plugin>@<version>"
     ]
 }

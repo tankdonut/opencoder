@@ -105,9 +105,9 @@ opencode-harness/
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": [
-        "@tarquinen/opencode-dcp@3.1.11",
-        "cc-safety-net@0.9.0",
-        "oh-my-openagent@4.0.0"
+        "@tarquinen/opencode-dcp@3.1.13",
+        "cc-safety-net@1.0.6",
+        "oh-my-openagent@4.12.0"
     ]
 }
 ```
@@ -151,7 +151,7 @@ function install_plugin() {
 
 ```dockerfile
 # Always pin versions, never use 'latest'
-FROM docker.io/library/ubuntu:25.10
+FROM docker.io/library/ubuntu:26.04
 
 # Multi-stage builds for efficiency
 COPY --from=builder /dist/ /vendor/bin/
