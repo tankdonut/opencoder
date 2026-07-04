@@ -490,7 +490,9 @@ main() {
     verify_opencode || exit 1
     bootstrap_config || exit 1
     validate_config || exit 1
-    install_oh_my_opencode || true
+    if ! install_oh_my_opencode; then
+        log_warn "Oh-My-OpenCode installation failed (orchestrator features unavailable; container continues)"
+    fi
     verify_installation || exit 1
 
     print_summary
