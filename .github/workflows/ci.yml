@@ -101,7 +101,7 @@ jobs:
 
       - name: Scan image for vulnerabilities
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           severity: CRITICAL,HIGH
