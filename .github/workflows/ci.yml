@@ -99,15 +99,14 @@ jobs:
         run: |
           ./scripts/container-test.sh ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.CONTAINER_CMD }}
 
-      - name: Scan image for vulnerabilities (optional)
+      - name: Scan image for vulnerabilities
         continue-on-error: true
-        run: |
-          echo "Scanning image for vulnerabilities..."
-          if command -v podman &> /dev/null; then
-            podman image scan ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || true
-          else
-            echo "Image scanning not available with Docker, skipping..."
-          fi
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          format: table
 
       - name: Push to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
