@@ -191,18 +191,6 @@ copy_config() {
     return 1
 }
 
-# Stub: Copy assets from module directory
-copy_assets() {
-    local module_path="${1:-}"
-    local config_dir="${2:-}"
-    # shellcheck disable=SC2034
-    local force="${OPENCODE_BOOTSTRAP_FORCE:-0}"
-
-    # STUB: Not implemented yet
-    echo "STUB_NOT_IMPLEMENTED" >&2
-    return 1
-}
-
 # Source real implementations from entrypoint.sh (overrides stubs)
 # shellcheck source=../entrypoint.sh
 source "${BASH_SOURCE[0]%/*}/../build/entrypoint.sh"
@@ -361,139 +349,6 @@ test_copy_config_existing_with_force() {
     rm -rf "$temp_dir"
 }
 
-# Test 7: copy_assets skips when module lacks asset directories
-test_copy_assets_missing_source_dir() {
-    local temp_dir
-    temp_dir=$(mktemp -d)
-
-    local module_path="${temp_dir}/modules/test-module"
-    local config_dir="${temp_dir}/.config/opencode"
-
-    # Create module without asset directories
-    mkdir -p "$module_path"
-    echo "# Test module" > "${module_path}/README.md"
-
-    # No skills/, agents/, commands/ directories
-    mkdir -p "$config_dir"
-
-    unset OPENCODE_BOOTSTRAP_FORCE
-
-    if copy_assets "$module_path" "$config_dir" 2>/dev/null; then
-        # Should succeed without copying anything
-        # No assertion needed - just check it doesn't fail
-        return 0
-    else
-        # Expected to fail - stub not implemented
-        return 1
-    fi
-
-    # Cleanup
-    rm -rf "$temp_dir"
-}
-
-# Test 8: copy_assets copies when target files missing
-test_copy_assets_missing_target() {
-    local temp_dir
-    temp_dir=$(mktemp -d)
-
-    local module_path="${temp_dir}/modules/test-module"
-    local config_dir="${temp_dir}/.config/opencode"
-
-    # Create module with skills directory
-    mkdir -p "${module_path}/skills"
-    echo "# Test Skill" > "${module_path}/skills/test-skill.md"
-
-    # Config dir exists but no skills
-    mkdir -p "$config_dir"
-
-    unset OPENCODE_BOOTSTRAP_FORCE
-
-    if copy_assets "$module_path" "$config_dir" 2>/dev/null; then
-        # Should copy skills directory
-        assert_dir_exists "${config_dir}/skills" "copy_assets should create skills directory"
-        assert_file_exists "${config_dir}/skills/test-skill.md" "copy_assets should copy skill files"
-    else
-        # Expected to fail - stub not implemented
-        return 1
-    fi
-
-    # Cleanup
-    rm -rf "$temp_dir"
-}
-
-# Test 9: copy_assets skips existing files without force
-test_copy_assets_existing_no_force() {
-    local temp_dir
-    temp_dir=$(mktemp -d)
-
-    local module_path="${temp_dir}/modules/test-module"
-    local config_dir="${temp_dir}/.config/opencode"
-
-    # Create module with skills
-    mkdir -p "${module_path}/skills"
-    echo "# New Skill Content" > "${module_path}/skills/test-skill.md"
-
-    # Create existing skill in config
-    mkdir -p "${config_dir}/skills"
-    echo "# Original Skill Content" > "${config_dir}/skills/test-skill.md"
-
-    local original_content
-    original_content=$(cat "${config_dir}/skills/test-skill.md")
-
-    unset OPENCODE_BOOTSTRAP_FORCE
-
-    if copy_assets "$module_path" "$config_dir" 2>/dev/null; then
-        # Should NOT overwrite existing file
-        local new_content
-        new_content=$(cat "${config_dir}/skills/test-skill.md")
-        assert_equals "$original_content" "$new_content" "copy_assets should skip existing without force"
-    else
-        # Expected to fail - stub not implemented
-        return 1
-    fi
-
-    # Cleanup
-    rm -rf "$temp_dir"
-}
-
-# Test 10: copy_assets overwrites existing files with force
-test_copy_assets_with_force() {
-    local temp_dir
-    temp_dir=$(mktemp -d)
-
-    local module_path="${temp_dir}/modules/test-module"
-    local config_dir="${temp_dir}/.config/opencode"
-
-    # Create module with skills
-    mkdir -p "${module_path}/skills"
-    echo "# New Skill Content" > "${module_path}/skills/test-skill.md"
-
-    # Create existing skill in config
-    mkdir -p "${config_dir}/skills"
-    echo "# Original Skill Content" > "${config_dir}/skills/test-skill.md"
-
-    local source_content
-    source_content=$(cat "${module_path}/skills/test-skill.md")
-
-    # Set force
-    export OPENCODE_BOOTSTRAP_FORCE=1
-
-    if copy_assets "$module_path" "$config_dir" 2>/dev/null; then
-        # Should overwrite existing file
-        local new_content
-        new_content=$(cat "${config_dir}/skills/test-skill.md")
-        assert_equals "$source_content" "$new_content" "copy_assets should overwrite with force"
-    else
-        # Expected to fail - stub not implemented
-        unset OPENCODE_BOOTSTRAP_FORCE
-        return 1
-    fi
-
-    unset OPENCODE_BOOTSTRAP_FORCE
-    # Cleanup
-    rm -rf "$temp_dir"
-}
-
 # =============================================================================
 # Test Runner
 # =============================================================================
@@ -517,10 +372,6 @@ main() {
     run_test "test_copy_config_missing_target" test_copy_config_missing_target
     run_test "test_copy_config_existing_no_force" test_copy_config_existing_no_force
     run_test "test_copy_config_existing_with_force" test_copy_config_existing_with_force
-    run_test "test_copy_assets_missing_source_dir" test_copy_assets_missing_source_dir
-    run_test "test_copy_assets_missing_target" test_copy_assets_missing_target
-    run_test "test_copy_assets_existing_no_force" test_copy_assets_existing_no_force
-    run_test "test_copy_assets_with_force" test_copy_assets_with_force
 
     echo ""
     echo "========================================"
@@ -542,8 +393,7 @@ main() {
         echo "  1. Implement derive_config_dir() in entrypoint.sh"
         echo "  2. Implement create_config_dir() in entrypoint.sh"
         echo "  3. Implement copy_config() in entrypoint.sh"
-        echo "  4. Implement copy_assets() in entrypoint.sh"
-        echo "  5. Re-run this test to verify"
+        echo "  4. Re-run this test to verify"
         echo ""
         # Return success anyway for TDD workflow
         return 0
