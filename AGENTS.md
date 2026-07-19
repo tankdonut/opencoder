@@ -48,6 +48,7 @@ opencoder/
 │   ├── bump-version.sh         # OpenCode version + checksum updater (284L)
 │   ├── container-test.sh       # Post-build integration test suite (594L, CI-run)
 │   ├── local-setup.sh          # Host bootstrap (non-container path)
+│   ├── opencode-sandbox.sh     # Linux sandbox wrapper: bwrap / gVisor / nspawn (392L)
 │   └── validate.sh             # Pre-build validation (395L, CI-run)
 ├── tests/                     # Unit tests (see tests/AGENTS.md)
 │   └── test_bootstrap.sh      # TDD tests for entrypoint helpers (557L, NOT in CI)
@@ -91,6 +92,27 @@ opencoder/
 podman run -it --rm opencoder
 # OR
 docker run -it --rm opencoder
+```
+
+### Sandboxed OpenCode
+
+```bash
+# Run OpenCode inside a Linux sandbox on the host.
+# Default mode is bubblewrap (lightweight namespaces, no daemon, no image).
+./scripts/opencode-sandbox.sh
+
+# gVisor (runsc) via Podman — strongest practical boundary.
+# Same model Tencent uses for millions of daily agent sandboxes.
+./scripts/opencode-sandbox.sh --mode gvisor
+
+# bwrap but keep agent edits on the host (default discards edits on exit)
+./scripts/opencode-sandbox.sh --persist
+
+# Block network access (default: allow, needed for LLM API calls)
+./scripts/opencode-sandbox.sh --no-net
+
+# Drop into a sandboxed shell instead of running opencode
+./scripts/opencode-sandbox.sh -- bash
 ```
 
 ### Skills Management

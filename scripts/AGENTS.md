@@ -13,6 +13,7 @@ Host-side bash scripts that **build, validate, test, and bump** the OpenCode con
 | `container-test.sh` | 594 | ✅ build-and-test job | Post-build integration suite (15 test groups) |
 | `bump-version.sh` | 284 | ❌ manual | Atomic OpenCode version + checksum updater |
 | `local-setup.sh` | 303 | ❌ manual | Host bootstrap (non-container path) |
+| `opencode-sandbox.sh` | 392 | ❌ manual | Linux sandbox wrapper (bwrap / gVisor / nspawn modes) |
 
 ## Conventions
 
