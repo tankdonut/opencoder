@@ -1,6 +1,6 @@
 # opencoder
 
-[![CI](https://github.com/tankdonut/opencoder/actions/workflows/ci.yml/badge.svg)](https://github.com/tankdonut/opencoder/actions/workflows/ci.yml)
+[![Build & Publish Image](https://github.com/tankdonut/opencoder/actions/workflows/build-and-publish-image.yaml/badge.svg)](https://github.com/tankdonut/opencoder/actions/workflows/build-and-publish-image.yaml)
 [![Container](https://img.shields.io/badge/container-ghcr.io-blue)](https://github.com/tankdonut/opencoder/pkgs/container/opencoder)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 

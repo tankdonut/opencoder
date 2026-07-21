@@ -1,0 +1,21 @@
+name: Lint & Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pre-commit:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          # full history needed by pre-commit hooks (e.g. check-added-large-files)
+          fetch-depth: 0
+
+      - name: Run pre-commit
+        uses: tankdonut/github-actions/actions/pre-commit@v1

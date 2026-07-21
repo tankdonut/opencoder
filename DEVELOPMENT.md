@@ -106,7 +106,7 @@ podman run -it --rm ghcr.io/tankdonut/opencoder:latest
 
 ### CI Configuration
 
-- Workflow: `.github/workflows/ci.yml`
+- Workflows: `.github/workflows/` (4 files — `lint-and-test.yaml`, `build-and-publish-image.yaml`, `prune-ghcr-images.yaml`, `renovate-auto-approve.yaml`); consume centralized actions from `tankdonut/github-actions@v1`
 - Test script: `scripts/container-test.sh`
 - Validation: `scripts/validate.sh`
 
