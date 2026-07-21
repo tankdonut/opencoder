@@ -23,6 +23,7 @@ opencoder/
 │       ├── prune-ghcr-images.yaml       # Daily GHCR tag pruning (reusable workflow)
 │       └── renovate-auto-approve.yaml   # Auto-approve non-draft Renovate PRs
 ├── .pre-commit-config.yaml    # Pre-commit hooks (hadolint, shellcheck, hygiene)
+├── .tool-versions             # asdf tools (hadolint) — installed by CI's pre-commit action
 ├── .node-version              # Node 24 (kept for tooling; not required by CI)
 ├── renovate.json              # Renovate bot (config:recommended, 7-day min release age)
 ├── build/                     # Container build context ( sole context for `podman build` )
