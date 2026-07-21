@@ -18,9 +18,13 @@ opencoder/
 │   ├── CODEOWNERS              # Review auto-assignment
 │   ├── dependabot.yml          # Dependabot (docker + github-actions ecosystems)
 │   └── workflows/
-│       └── ci.yml              # 3-job pipeline: validate → build-and-test → ci-status
+│       ├── lint-and-test.yaml           # Pre-commit via tankdonut/github-actions@v1
+│       ├── build-and-publish-image.yaml # Build, scan, publish to GHCR (cron + push + PR + dispatch)
+│       ├── prune-ghcr-images.yaml       # Daily GHCR tag pruning (reusable workflow)
+│       └── renovate-auto-approve.yaml   # Auto-approve non-draft Renovate PRs
 ├── .pre-commit-config.yaml    # Pre-commit hooks (hadolint, shellcheck, hygiene)
-├── .node-version              # Node 24 (CI setup-node reads this)
+├── .tool-versions             # asdf tools (hadolint) — installed by CI's pre-commit action
+├── .node-version              # Node 24 (kept for tooling; not required by CI)
 ├── renovate.json              # Renovate bot (config:recommended, 7-day min release age)
 ├── build/                     # Container build context ( sole context for `podman build` )
 │   ├── .containerignore        # Container build exclusions
@@ -144,10 +148,10 @@ jq . build/skills-lock.json
 ### CI/CD
 
 ```bash
-# Run pre-build validation (same as CI validate job)
+# Run pre-build validation (same as CI build-and-publish-image workflow)
 ./scripts/validate.sh
 
-# Run container test suite (same as CI test job)
+# Run container test suite (same as CI build-and-publish-image workflow)
 ./scripts/container-test.sh opencoder:latest
 
 # Run container test suite with Docker

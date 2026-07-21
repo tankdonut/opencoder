@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Host-side bash scripts that **build, validate, test, and bump** the OpenCode container image. Invoked by CI (`.github/workflows/ci.yml`) and by developers locally. No script sources another — coupling is data-level (version/checksum files) and CI-level (job sequencing).
+Host-side bash scripts that **build, validate, test, and bump** the OpenCode container image. Invoked by CI (`.github/workflows/build-and-publish-image.yaml`) and by developers locally. No script sources another — coupling is data-level (version/checksum files) and CI-level (job sequencing).
 
 ## File Inventory
 
 | Script | LOC | CI-run? | Role |
 |--------|-----|---------|------|
-| `validate.sh` | 395 | ✅ validate job | Pre-build validation (7 checks + `--fix` mode) |
-| `build.sh` | 204 | ✅ build-and-test job | Container build driver (podman/docker auto-detect) |
-| `container-test.sh` | 594 | ✅ build-and-test job | Post-build integration suite (15 test groups) |
+| `validate.sh` | 395 | ✅ build-and-publish-image | Pre-build validation (7 checks + `--fix` mode) |
+| `build.sh` | 204 | ✅ build-and-publish-image | Container build driver (podman/docker auto-detect) |
+| `container-test.sh` | 594 | ✅ build-and-publish-image | Post-build integration suite (15 test groups) |
 | `bump-version.sh` | 284 | ❌ manual | Atomic OpenCode version + checksum updater |
 | `local-setup.sh` | 303 | ❌ manual | Host bootstrap (non-container path) |
 | `opencode-sandbox.sh` | 392 | ❌ manual | Linux sandbox wrapper (bwrap / gVisor / nspawn modes) |
@@ -104,14 +104,21 @@ verify_installation / print_summary / main
 
 ## CI Integration
 
+CI consumes centralized actions from [`tankdonut/github-actions@v1`](https://github.com/tankdonut/github-actions):
+
 ```
-ci.yml
- ├─ validate job:    validate.sh + pre-commit run --all-files + hadolint
- └─ build-and-test:  build.sh → tag (sha, version, latest) → container-test.sh → push ghcr.io (main only)
+.github/workflows/
+ ├─ lint-and-test.yaml:            pre-commit@v1 (all-files)
+ ├─ build-and-publish-image.yaml:  validate.sh → build.sh → tag (sha, version, latest)
+ │                                 → container-test.sh → trivy (advisory)
+ │                                 → ghcr-login@v1 → push ghcr.io (non-PR only)
+ ├─ prune-ghcr-images.yaml:        reusable prune-ghcr.yaml@v1 (daily cron)
+ └─ renovate-auto-approve.yaml:    renovate-auto-approve@v1 (on Renovate PRs)
 ```
-- Triggers: push to `main`, PR to `main`, `workflow_dispatch`; path-filtered on `build/**`, `scripts/**`, `ci.yml`, `.pre-commit-config.yaml` (note: a `tests/**` filter exists but tests/ has no CI-wired tests → filter matches nothing)
-- `ci-status` job (`if: always()`) fails pipeline if upstream failed
-- Vulnerability scan: `aquasecurity/trivy-action@0.28.0` (ci.yml), image-ref scan, severity CRITICAL/HIGH, `continue-on-error: true` (non-blocking advisory). Docker-compatible — runs in CI and locally.
+- Build triggers: `schedule (Mon 03:00 UTC)`, `workflow_dispatch`, PR + push to `main` (path-filtered on `build/**`, `scripts/**`, the workflow file itself); PR runs build+test+scan but never publish
+- Pre-commit runs on every PR + push to `main` (no path filter, `fetch-depth: 0`)
+- No `ci-status` aggregator job — set branch-protection required checks on `Lint & Test / pre-commit` + `Build & Publish Image / release`
+- Vulnerability scan: `aquasecurity/trivy-action@v0.36.0`, image-ref scan, severity CRITICAL/HIGH, `continue-on-error: true` (non-blocking advisory). Docker-compatible — runs in CI and locally.
 
 ## Anti-Patterns (script-specific)
 

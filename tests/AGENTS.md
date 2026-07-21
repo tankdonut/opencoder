@@ -6,7 +6,7 @@ TDD-style **unit tests** for `build/entrypoint.sh` bootstrap helper functions. U
 
 ## ⚠️ CRITICAL: Not Wired Into CI
 
-`tests/test_bootstrap.sh` is **NOT invoked by `.github/workflows/ci.yml`**. CI runs only `scripts/container-test.sh` (the integration suite). This file is **dev-only** — run it manually:
+`tests/test_bootstrap.sh` is **NOT invoked by `.github/workflows/build-and-publish-image.yaml`**. CI runs only `scripts/container-test.sh` (the integration suite). This file is **dev-only** — run it manually:
 
 ```bash
 bash tests/test_bootstrap.sh
