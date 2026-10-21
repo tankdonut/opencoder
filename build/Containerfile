@@ -13,7 +13,7 @@
 #   opencoder:latest  - current default
 # ============================================
 
-FROM ghcr.io/tankdonut/tools:latest@sha256:2153361a7d0c4efc2f8a914adaded0089994551d0819d5398df66900ba497aed AS tools
+FROM ghcr.io/tankdonut/tools:latest@sha256:e2e3043edbc31b89641ba5fe2a28e5935911ae58f8590bf17d060f1910429a4c AS tools
 
 FROM docker.io/library/ubuntu:26.04
 
